@@ -3,6 +3,8 @@
 import torch
 import torch.nn as nn
 
+from utils import init_weights
+
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, base_channels=64):
@@ -73,6 +75,12 @@ class Encoder(nn.Module):
             nn.ReLU(inplace=True),
             nn.Dropout2d()
         )
+
+        init_weights(self.block1)
+        init_weights(self.block2)
+        init_weights(self.block3)
+        init_weights(self.block4)
+        init_weights(self.block5)
 
     def forward(self, x):
         outs = []
@@ -155,6 +163,11 @@ class SemanticSegmentationDecoder(nn.Module):
             # nn.BatchNorm2d(self.C),
             # nn.Softmax(dim=1),
         )
+
+        init_weights(self.block1)
+        init_weights(self.block2)
+        init_weights(self.block3)
+        init_weights(self.block4)
 
     def forward(self, x):
         """
@@ -249,6 +262,12 @@ class BoudingBoxRegressionDecoder(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(self.C, 4 * self.n_a, kernel_size=3, stride=1, padding=1)
         )
+
+        init_weights(self.block1)
+        init_weights(self.block2)
+        init_weights(self.block3)
+        init_weights(self.block4e)
+        init_weights(self.block4f)
 
     def forward(self, x):
         """
