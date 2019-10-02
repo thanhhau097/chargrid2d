@@ -125,12 +125,7 @@ class ChargridLoss(nn.Module):
 
 
 if __name__ == '__main__':
-    # x = torch.zeros([1, 10, 64, 64])
-    # y = torch.zeros([1, 64, 64, 10], dtype=torch.long)
-    # # loss = FocalLoss()
-    # # print(loss(x, y))
-    # print(focal_loss(x, y, 0.25, 2, 'mean'))
-    N = 5  # num_classes
+    N = 5
     loss = FocalLoss(0.25, 2, 'mean')
     input = torch.randn(1, N, 3, 5, requires_grad=True)
     target = torch.empty(1, 3, 5, dtype=torch.long).random_(N)

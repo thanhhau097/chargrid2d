@@ -2,6 +2,8 @@ import torch.nn.init as init
 from torch import nn
 import torch
 
+from typing import Optional
+
 
 def init_weights(modules):
     for m in modules:
