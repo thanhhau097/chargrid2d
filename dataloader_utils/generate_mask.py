@@ -168,14 +168,14 @@ class MaskGenerator():
             write_json(osp.join('./data/obj_gt', name + '.json'), obj)
             torch.save(tensor, osp.join('./data/tensor_input', name + '.pt'))
 
-            if __debug__:
-                plt.imshow(debug_img)
-                plt.show()
-
-                # q = cv2.waitKey(-1)
-                # if q == ord('q'):
-                #     cv2.destroyAllWindows()
-                #     break
+            # if __debug__:
+            #     plt.imshow(debug_img)
+            #     plt.show()
+            #
+            #     # q = cv2.waitKey(-1)
+            #     # if q == ord('q'):
+            #     #     cv2.destroyAllWindows()
+            #     #     break
 
     def generate_target(self):
         for lbl_path in self.path_std_lbls:
@@ -218,9 +218,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     root = args.root_folder
-    root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
+    root = '../data/'
 
-    lbl_fol = osp.join(root, 'processed_labels')
+    lbl_fol = osp.join(root, 'labels')
     img_fol = osp.join(root, 'images')
     out_fol = osp.join('./data', 'standard_lbl')
 

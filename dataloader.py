@@ -145,7 +145,7 @@ if __name__ == "__main__":
         alb.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT)
     ], alb.BboxParams(format='coco', label_fields=['lbl_id']))
 
-    dataset = SegDataset('./data', transform=aug)
+    dataset = SegDataset('data', transform=aug)
     data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     for idx, sample in enumerate(data_loader):
