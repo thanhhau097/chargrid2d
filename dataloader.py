@@ -114,6 +114,14 @@ class SegDataset(Dataset):
 
 class ChargridDataloader(DataLoader):
     def __init__(self, root, image_size, batch_size, shuffle=True):
+        """
+        Generate batch of items for training and validating
+
+        :param root: data directory
+        :param image_size: size of image with training with batch
+        :param batch_size: number of images in one batch
+        :param shuffle: shuffle after each epoch
+        """
         self.root = root
         self.size = image_size
         self.aug = alb.Compose([
