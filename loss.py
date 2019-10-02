@@ -99,6 +99,7 @@ def focal_loss(
     return FocalLoss(alpha, gamma, reduction)(input, target)
 
 
+# TODO: currently only use Segmentation Decoder
 class ChargridLoss(nn.Module):
     def __init__(self):
         super(ChargridLoss, self).__init__()
@@ -119,9 +120,9 @@ class ChargridLoss(nn.Module):
         :return:
         """
         loss_seg = self.loss_seg_fn(pred_seg. gt_seg)
-        loss_boxmask = self.loss_box_mask_fn(pred_boxmask, gt_boxmask)
+        # loss_boxmask = self.loss_box_mask_fn(pred_boxmask, gt_boxmask)
 
-        return loss_seg + loss_boxmask
+        return loss_seg  # + loss_boxmask
 
 
 if __name__ == '__main__':
