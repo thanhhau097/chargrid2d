@@ -1,4 +1,4 @@
-# TODO: Code model in figure 2
+# TODO: Code model in figure 2, init weights
 
 import torch
 import torch.nn as nn
@@ -151,7 +151,7 @@ class SemanticSegmentationDecoder(nn.Module):
             nn.Conv2d(self.C, self.C, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C),
             nn.ReLU(inplace=True),
-            nn.Conv2d(self.C, self.output_channels, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(self.C, self.output_channels, kernel_size=3, stride=1, padding=1, bias=True),
             # nn.BatchNorm2d(self.C),
             # nn.Softmax(dim=1),
         )
