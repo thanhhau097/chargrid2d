@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from utils import make_folder, read_json, write_json, extract_info
+from dataloader_utils.utils import make_folder, read_json, write_json, extract_info
 
 
 class MaskGenerator():
@@ -195,6 +195,7 @@ class MaskGenerator():
             self.target2idx[target] = idx
 
         write_json('./data/target.json', self.target)
+        write_json('./data/target2idx.json', self.target2idx)
 
     def process(self, lbl_fol, img_fol, out_fol):
         make_folder(out_fol)
