@@ -186,7 +186,7 @@ class SemanticSegmentationDecoder(nn.Module):
         # print(y.size())
 
         y = self.block4(y)
-        return y.permute(0, 2, 3, 1)  # non-softmax
+        return y  #.permute(0, 2, 3, 1)  # non-softmax
 
 
 class BoudingBoxRegressionDecoder(nn.Module):
@@ -288,7 +288,7 @@ class BoudingBoxRegressionDecoder(nn.Module):
         ye = self.block4e(y)
         yf = self.block4f(y)
 
-        return ye.permute(0, 2, 3, 1), yf.permute(0, 2, 3, 1)  # non-softmax
+        return ye, yf  # ye.permute(0, 2, 3, 1), yf.permute(0, 2, 3, 1)  # non-softmax
 
 
 class Chargrid2D(nn.Module):
