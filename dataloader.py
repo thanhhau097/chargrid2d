@@ -6,21 +6,27 @@ import albumentations as alb
 from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-from dataloader_utils.onehotencoder import OneHotEncoder
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from PIL import Image
 
 from dataloader_utils.utils import read_json
+from dataloader_utils.onehotencoder import OneHotEncoder
+from dataloader_utils.generate_mask import MaskGenerator
 
 
 class SegDataset(Dataset):
     def __init__(self, root, size=(1024, 1024), transform=None):
+        super().__init__()
         self.root = root
         self.size = size
         self.transform = transform
+
+        #input
+        self.lbl_fol = osp.join(root, 'labels')
         self.img_fol = osp.join(root, 'images')
+
         self.tensor_fol = osp.join(root, 'tensor_input')
         self.semantic_fol = osp.join(root, 'semantic_gt')
         self.obj_fol = osp.join(root, 'obj_gt')
@@ -28,10 +34,10 @@ class SegDataset(Dataset):
         self.target_path = osp.join(root, 'target.json')
         self.target2idx_path = osp.join(root, 'target2idx.json')
 
-        self.img_lst = glob.glob(osp.join(self.img_fol, '*.png'))
-        self.tensor_lst = glob.glob(osp.join(self.tensor_fol, '*.pt'))
-        self.semantic_lst = glob.glob(osp.join(self.semantic_fol, '*.png'))
-        self.obj_lst = glob.glob(osp.join(self.obj_fol, '*.json'))
+        self.img_lst = glob.glob(osp.join(self.img_fol,  '*.png'))
+        self.tensor_lst = glob.glob(osp.join(self.tensor_fol,  '*.pt'))
+        self.semantic_lst = glob.glob(osp.join(self.semantic_fol,  '*.png'))
+        self.obj_lst = glob.glob(osp.join(self.obj_fol,  '*.json'))
 
         self.idx2name = {}
         for idx, path in enumerate(self.tensor_lst):
@@ -41,6 +47,7 @@ class SegDataset(Dataset):
         self.target = read_json(self.target_path)
         self.target2idx = read_json(self.target2idx_path)
         self.enc = OneHotEncoder(self.corpus)
+        self.datagenerator = MaskGenerator()
 
     def __len__(self):
         return len(self.tensor_lst)
@@ -52,6 +59,8 @@ class SegDataset(Dataset):
         for line in obj:
             coor = line['box']
             c_x, c_y, w, h = coor
+            w += 0.001
+            h += 0.001
             boxes.append([c_x, c_y, w, h])
             labels.append(self.target2idx[line['class']])
 
@@ -59,7 +68,7 @@ class SegDataset(Dataset):
 
     def __getitem__(self, idx):
         name = self.idx2name[idx]
-
+        print(name)
         tensor_path = osp.join(self.tensor_fol, name + '.pt')
         semantic_path = osp.join(self.semantic_fol, name + '.png')
         obj_path = osp.join(self.obj_fol, name + '.json')
@@ -83,23 +92,23 @@ class SegDataset(Dataset):
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             img = img.unsqueeze(0)
             img = self.enc.process(img)
-
+        
         return img, mask, boxes, lbl_boxes
 
     def visualize(self, img, mask):
         imgs = np.asarray(img)
         masks = np.asarray(mask)
 
-        debug = np.zeros((imgs.shape[1] * 2, imgs.shape[0] * imgs.shape[2]))
+        debug = np.zeros((imgs.shape[1]*2, imgs.shape[0]*imgs.shape[2]))
 
         for idx, img in enumerate(imgs):
-            debug[:img.shape[0], idx * img.shape[0]:(idx + 1) * img.shape[1]] = img
+            debug[:img.shape[0], idx*img.shape[0]:(idx+1)*img.shape[1]] = img
         for idx, mask in enumerate(masks):
-            debug[mask.shape[0]:, idx * mask.shape[0]:(idx + 1) * mask.shape[1]] = 255 - mask
+            debug[mask.shape[0]:, idx*mask.shape[0]:(idx+1)*mask.shape[1]] = 255 - mask
 
         plt.imshow(debug)
         plt.show()
-
+    
     def visualize_box(self, img, boxes):
         for idx, bbox in enumerate(boxes):
             bbox = list(bbox)
@@ -111,41 +120,13 @@ class SegDataset(Dataset):
         plt.imshow(img)
         plt.show()
 
-
-class ChargridDataloader(DataLoader):
-    def __init__(self, root, image_size, batch_size, shuffle=True):
-        """
-        Generate batch of items for training and validating
-
-        :param root: data directory
-        :param image_size: size of image with training with batch
-        :param batch_size: number of images in one batch
-        :param shuffle: shuffle after each epoch
-        """
-        self.root = root
-        self.size = image_size
-        self.aug = alb.Compose([
-            alb.LongestMaxSize(image_size),
-            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT)
-        ], alb.BboxParams(format='coco', label_fields=['lbl_id']))
-
-        dataset = SegDataset('./data', transform=aug)
-
-        kwarg = {
-            'dataset': dataset,
-            'batch_size': batch_size,
-            'shuffle': shuffle
-        }
-
-        super(ChargridDataloader, self).__init__(**kwarg)
-
 if __name__ == "__main__":
     aug = alb.Compose([
         alb.LongestMaxSize(512),
         alb.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT)
-    ], alb.BboxParams(format='coco', label_fields=['lbl_id']))
+    ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-    dataset = SegDataset('data', transform=aug)
+    dataset = SegDataset('./data', transform=aug)
     data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     for idx, sample in enumerate(data_loader):
