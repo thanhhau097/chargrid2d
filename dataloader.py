@@ -120,6 +120,35 @@ class SegDataset(Dataset):
         plt.imshow(img)
         plt.show()
 
+
+class ChargridDataloader(DataLoader):
+    def __init__(self, root, image_size, batch_size, shuffle=True):
+        """
+        Generate batch of items for training and validating
+
+        :param root: data directory
+        :param image_size: size of image with training with batch
+        :param batch_size: number of images in one batch
+        :param shuffle: shuffle after each epoch
+        """
+        self.root = root
+        self.size = image_size
+        self.aug = alb.Compose([
+            alb.LongestMaxSize(image_size),
+            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT)
+        ], alb.BboxParams(format='coco', label_fields=['lbl_id']))
+
+        dataset = SegDataset('./data', transform=aug)
+
+        kwarg = {
+            'dataset': dataset,
+            'batch_size': batch_size,
+            'shuffle': shuffle
+        }
+
+        super(ChargridDataloader, self).__init__(**kwarg)
+
+
 if __name__ == "__main__":
     aug = alb.Compose([
         alb.LongestMaxSize(512),
