@@ -14,6 +14,7 @@ from PIL import Image
 from dataloader_utils.utils import read_json
 from dataloader_utils.onehotencoder import OneHotEncoder
 from dataloader_utils.generate_mask import MaskGenerator
+from dataloader_utils.base_dataloader import BaseDataLoader
 
 
 class SegDataset(Dataset):
@@ -121,8 +122,8 @@ class SegDataset(Dataset):
         plt.show()
 
 
-class ChargridDataloader(DataLoader):
-    def __init__(self, root, image_size, batch_size, shuffle=True):
+class ChargridDataloader(BaseDataLoader):
+    def __init__(self, root, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
         """
         Generate batch of items for training and validating
 
@@ -138,12 +139,15 @@ class ChargridDataloader(DataLoader):
             alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-        dataset = SegDataset('./data', transform=aug)
+        dataset = SegDataset('./data', transform=self.aug)
 
         kwarg = {
             'dataset': dataset,
             'batch_size': batch_size,
-            'shuffle': shuffle
+            'shuffle': shuffle,
+            'validation_split': validation_split,
+            'num_workers': num_workers,
+            'collate_fn': collate_fn
         }
 
         super(ChargridDataloader, self).__init__(**kwarg)

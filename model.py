@@ -308,8 +308,8 @@ class Chargrid2D(nn.Module):
 
 
 if __name__ == '__main__':
-    model = Chargrid2D(input_channels=3, n_classes=10)
-    x = torch.ones((1, 3, 512, 512))
+    model = Chargrid2D(input_channels=302, n_classes=10)
+    x = torch.ones((1, 302, 512, 512))
     y1, y2, y3 = model(x)
     print(y1.size())
     print(y2.size())

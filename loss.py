@@ -104,8 +104,8 @@ def focal_loss(
 class ChargridLoss(nn.Module):
     def __init__(self):
         super(ChargridLoss, self).__init__()
-        self.loss_seg_fn = FocalLoss()  # TODO: set hyper parameters
-        self.loss_box_mask_fn = FocalLoss()
+        self.loss_seg_fn = FocalLoss(alpha=0.25, gamma=2, reduction='mean')  # TODO: set hyper parameters
+        self.loss_box_mask_fn = FocalLoss(alpha=0.25, gamma=2, reduction='mean')
         self.loss_boxcoord_fn = nn.SmoothL1Loss(size_average=True)
         # https://github.com/kuangliu/pytorch-retinanet/blob/master/loss.py
 
@@ -120,7 +120,7 @@ class ChargridLoss(nn.Module):
         :param gt_boxcoord:
         :return:
         """
-        loss_seg = self.loss_seg_fn(pred_seg. gt_seg)
+        loss_seg = self.loss_seg_fn(pred_seg, gt_seg)
         # loss_boxmask = self.loss_box_mask_fn(pred_boxmask, gt_boxmask)
 
         return loss_seg  # + loss_boxmask
