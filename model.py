@@ -21,7 +21,7 @@ class Encoder(nn.Module):
             nn.Conv2d(self.C, self.C, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block2 = nn.Sequential(
@@ -34,7 +34,7 @@ class Encoder(nn.Module):
             nn.Conv2d(self.C * 2, self.C * 2, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C * 2),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block3 = nn.Sequential(
@@ -47,7 +47,7 @@ class Encoder(nn.Module):
             nn.Conv2d(self.C * 4, self.C * 4, kernel_size=3, stride=1, dilation=2, padding=2),
             nn.BatchNorm2d(self.C * 4),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block4 = nn.Sequential(
@@ -60,7 +60,7 @@ class Encoder(nn.Module):
             nn.Conv2d(self.C * 8, self.C * 8, kernel_size=3, stride=1, dilation=4, padding=4),
             nn.BatchNorm2d(self.C * 8),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block5 = nn.Sequential(
@@ -73,7 +73,7 @@ class Encoder(nn.Module):
             nn.Conv2d(self.C * 8, self.C * 8, kernel_size=3, stride=1, dilation=8, padding=8),
             nn.BatchNorm2d(self.C * 8),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         init_weights(self.block1)
@@ -124,7 +124,7 @@ class SemanticSegmentationDecoder(nn.Module):
             nn.Conv2d(self.C * 4, self.C * 4, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C * 4),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block2 = nn.Sequential(
@@ -140,7 +140,7 @@ class SemanticSegmentationDecoder(nn.Module):
             nn.Conv2d(self.C * 2, self.C * 2, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C * 2),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block3 = nn.Sequential(
@@ -213,7 +213,7 @@ class BoudingBoxRegressionDecoder(nn.Module):
             nn.Conv2d(self.C * 4, self.C * 4, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C * 4),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block2 = nn.Sequential(
@@ -229,7 +229,7 @@ class BoudingBoxRegressionDecoder(nn.Module):
             nn.Conv2d(self.C * 2, self.C * 2, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(self.C * 2),
             nn.ReLU(inplace=True),
-            nn.Dropout2d()
+            nn.Dropout2d(0.1)
         )
 
         self.block3 = nn.Sequential(

@@ -91,6 +91,12 @@ class SegDataset(Dataset):
             lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
+            # convert boxes to (4 x H x W)
+            boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
+            # output_boxes = torch.zeros([4, img.size()[0], img.size()[1]])
+            # for box in boxes:
+
+
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         

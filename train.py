@@ -38,8 +38,7 @@ def train():
             pred_seg, pred_boxmask, pred_boxcoord = model(img)
             # default ground truth boxmask
             gt_boxmask = torch.ones([pred_boxmask.size()[0], pred_boxmask.size()[2], pred_boxmask.size()[3]]
-                                    , dtype=torch.int64)
-            # gt_boxmask[:, 1, :, :] = 0
+                                    , dtype=torch.int64)  # TODO: wrong
 
             mask = mask.type(torch.int64)
             loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, gt_boxmask, boxes)
@@ -67,14 +66,15 @@ def train():
             mask = mask.type(torch.int64)
 
             # default ground truth boxmask
-            gt_boxmask = torch.ones(pred_boxmask.size())
-            gt_boxmask[:, 1, :, :] = 0
+            gt_boxmask = torch.ones([pred_boxmask.size()[0], pred_boxmask.size()[2], pred_boxmask.size()[3]]
+                                    , dtype=torch.int64)  # TODO: wrong
 
             loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, gt_boxmask, boxes)
             epoch_loss += loss.item()  # loss is mean loss of batch
             print("Step", i, 'loss =', loss.item())
 
         print('Validation loss:', epoch_loss / len(val_dataloader))
+
 
 if __name__ == '__main__':
     train()
