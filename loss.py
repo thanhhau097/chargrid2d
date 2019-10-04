@@ -6,6 +6,8 @@ import torch.nn.functional as F
 
 from utils import one_hot
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
 # based on:
 # https://github.com/zhezh/focalloss/blob/master/focalloss.py
 class FocalLoss(nn.Module):
@@ -42,7 +44,7 @@ class FocalLoss(nn.Module):
                  reduction: Optional[str] = 'none') -> None:
         super(FocalLoss, self).__init__()
         self.alpha: float = alpha
-        self.gamma: torch.Tensor = torch.tensor(gamma)
+        self.gamma: torch.Tensor = torch.tensor(gamma).to(device)
         self.reduction: Optional[str] = reduction
         self.eps: float = 1e-6
 
@@ -72,7 +74,7 @@ class FocalLoss(nn.Module):
 
         # compute the actual focal loss
         weight = torch.pow(torch.tensor(1.) - input_soft,
-                           self.gamma.to(input.dtype))
+                           self.gamma.type(input.dtype))
         focal = -self.alpha * weight * torch.log(input_soft)
         loss_tmp = torch.sum(target_one_hot * focal, dim=1)
 
