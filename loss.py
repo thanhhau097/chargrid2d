@@ -124,8 +124,10 @@ class ChargridLoss(nn.Module):
         """
         loss_seg = self.loss_seg_fn(pred_seg, gt_seg)
         # loss_boxmask = self.loss_box_mask_fn(pred_boxmask, gt_boxmask)
+        # loss_boxcoord = self.loss_boxcoord_fn(pred_boxcoord, gt_boxcoord)
 
-        return loss_seg  # + loss_boxmask
+        return loss_seg  # + loss_boxmask + loss_boxcoord
+        #  TODO*: we must follow loss in https://arxiv.org/pdf/1506.01497.pdf
 
 
 if __name__ == '__main__':

@@ -69,7 +69,7 @@ class SegDataset(Dataset):
 
     def __getitem__(self, idx):
         name = self.idx2name[idx]
-        print(name)
+        # print(name)
         tensor_path = osp.join(self.tensor_fol, name + '.pt')
         semantic_path = osp.join(self.semantic_fol, name + '.png')
         obj_path = osp.join(self.obj_fol, name + '.json')
@@ -87,11 +87,16 @@ class SegDataset(Dataset):
             augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
             img = augmented['image'].astype('int16')
             mask = augmented['mask'].astype('int16')
-            boxes = augmented['bboxes']
+            boxes = torch.tensor(augmented['bboxes'])
             lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(np.array(lbl_boxes))
+            # convert boxes to (4 x H x W)
+            boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
+            # output_boxes = torch.zeros([4, img.size()[0], img.size()[1]])
+            # for box in boxes:
+
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
