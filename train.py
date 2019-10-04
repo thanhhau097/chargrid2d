@@ -15,7 +15,7 @@ def train():
     val_dataloader = dataloader.split_validation()
 
     loss_fn = ChargridLoss()
-    model = Chargrid2D(input_channels=302, n_classes=25)
+    model = Chargrid2D(input_channels=len(dataloader.dataset.corpus) + 1, n_classes=len(dataloader.dataset.target))
     # model = model.cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
