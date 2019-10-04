@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from utils import one_hot
 
 # based on:
 # https://github.com/zhezh/focalloss/blob/master/focalloss.py
