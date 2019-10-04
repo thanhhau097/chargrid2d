@@ -6,17 +6,18 @@ from loss import ChargridLoss
 from model import Chargrid2D
 # from metrics import
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 def train():
-    N_EPOCHS = 10
+    N_EPOCHS = 100
     best_loss = np.infty
 
-    dataloader = ChargridDataloader(root='data/', image_size=128, batch_size=4, validation_split=0.1)
+    dataloader = ChargridDataloader(root='data/', image_size=128, batch_size=1, validation_split=0.1)
     val_dataloader = dataloader.split_validation()
 
     loss_fn = ChargridLoss()
     model = Chargrid2D(input_channels=len(dataloader.dataset.corpus) + 1, n_classes=len(dataloader.dataset.target))
-    # model = model.cuda()
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(N_EPOCHS):
@@ -29,7 +30,7 @@ def train():
         for i, batch in enumerate(dataloader):
             # we need to get gt_seg, gt_boxmask, gt_boxcoord
             img, mask, boxes, lbl_boxes = batch
-            # img, mask, boxes, lbl_boxes = img.cuda(), mask.cuda(), boxes.cuda(), lbl_boxes.cuda()
+            img, mask, boxes, lbl_boxes = img.to(device), mask.to(device), boxes.to(device), lbl_boxes.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()

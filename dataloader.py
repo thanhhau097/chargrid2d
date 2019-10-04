@@ -91,6 +91,7 @@ class SegDataset(Dataset):
             lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
+            boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(np.array(lbl_boxes))
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
