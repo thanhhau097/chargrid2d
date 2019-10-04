@@ -11,7 +11,7 @@ def train():
     N_EPOCHS = 10
     best_loss = np.infty
 
-    dataloader = ChargridDataloader(root='data/', image_size=128, batch_size=4, validation_split=0.1)
+    dataloader = ChargridDataloader(root='data/', image_size=128, batch_size=1, validation_split=0.1)
     val_dataloader = dataloader.split_validation()
 
     loss_fn = ChargridLoss()
@@ -36,8 +36,13 @@ def train():
 
             # forward
             pred_seg, pred_boxmask, pred_boxcoord = model(img)
+            # default ground truth boxmask
+            gt_boxmask = torch.ones([pred_boxmask.size()[0], pred_boxmask.size()[2], pred_boxmask.size()[3]]
+                                    , dtype=torch.int64)
+            # gt_boxmask[:, 1, :, :] = 0
+
             mask = mask.type(torch.int64)
-            loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, None, boxes)
+            loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, gt_boxmask, boxes)
             epoch_loss += loss.item()  # loss is mean loss of batch
             print("Step", i, 'loss =', loss.item())
 
@@ -45,10 +50,31 @@ def train():
             loss.backward()
             optimizer.step()
 
+        print("Training loss:", epoch_loss / len(dataloader))
+
         # -------- EVALUATION -------
         model.eval()
         # TODO: update evaluation
+        print("START EVALUATION")
+        epoch_loss = 0
+        for i, batch in enumerate(val_dataloader):
+            # we need to get gt_seg, gt_boxmask, gt_boxcoord
+            img, mask, boxes, lbl_boxes = batch
+            # img, mask, boxes, lbl_boxes = img.cuda(), mask.cuda(), boxes.cuda(), lbl_boxes.cuda()
 
+            # forward
+            pred_seg, pred_boxmask, pred_boxcoord = model(img)
+            mask = mask.type(torch.int64)
+
+            # default ground truth boxmask
+            gt_boxmask = torch.ones(pred_boxmask.size())
+            gt_boxmask[:, 1, :, :] = 0
+
+            loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, gt_boxmask, boxes)
+            epoch_loss += loss.item()  # loss is mean loss of batch
+            print("Step", i, 'loss =', loss.item())
+
+        print('Validation loss:', epoch_loss / len(val_dataloader))
 
 if __name__ == '__main__':
     train()
