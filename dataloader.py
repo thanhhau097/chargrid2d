@@ -100,7 +100,7 @@ class SegDataset(Dataset):
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
-        return img, mask, boxes, lbl_boxes
+        return img, mask, [], [], #boxes, lbl_boxes
 
     def visualize(self, img, mask):
         imgs = np.asarray(img)
@@ -142,7 +142,7 @@ class ChargridDataloader(BaseDataLoader):
         self.size = image_size
         self.aug = alb.Compose([
             alb.LongestMaxSize(image_size),
-            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT)
+            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT),
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
         dataset = SegDataset('./data', transform=self.aug)
@@ -161,12 +161,14 @@ class ChargridDataloader(BaseDataLoader):
 
 if __name__ == "__main__":
     aug = alb.Compose([
-        alb.LongestMaxSize(512),
-        alb.PadIfNeeded(512, 512, border_mode=cv2.BORDER_CONSTANT)
+        alb.LongestMaxSize(524),
+        alb.PadIfNeeded(524, 524, border_mode=cv2.BORDER_CONSTANT),
+        alb.RandomCrop(512, 512, p=0.3),
+        alb.Resize(512, 512)
     ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
     dataset = SegDataset('./data', transform=aug)
-    data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
     for idx, sample in enumerate(data_loader):
         img, mask, boxes, lbl_boxes = sample
