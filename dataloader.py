@@ -141,8 +141,11 @@ class ChargridDataloader(BaseDataLoader):
         self.root = root
         self.size = image_size
         self.aug = alb.Compose([
-            alb.LongestMaxSize(image_size),
-            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT)
+            alb.LongestMaxSize(524),
+            alb.PadIfNeeded(image_size, image_size, border_mode=cv2.BORDER_CONSTANT),
+            alb.PadIfNeeded(524, 524, border_mode=cv2.BORDER_CONSTANT),
+            alb.RandomCrop(512, 512, p=0.3),
+            alb.Resize(512, 512)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
         dataset = SegDataset('./data', transform=self.aug)
