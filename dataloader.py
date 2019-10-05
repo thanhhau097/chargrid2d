@@ -100,7 +100,7 @@ class SegDataset(Dataset):
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
-        return img, mask, boxes, lbl_boxes
+        return img, mask, torch.tensor([]), torch.tensor([])  # boxes, lbl_boxes
 
     def visualize(self, img, mask):
         imgs = np.asarray(img)

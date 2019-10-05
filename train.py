@@ -60,7 +60,7 @@ def train():
         for i, batch in enumerate(val_dataloader):
             # we need to get gt_seg, gt_boxmask, gt_boxcoord
             img, mask, boxes, lbl_boxes = batch
-            # img, mask, boxes, lbl_boxes = img.cuda(), mask.cuda(), boxes.cuda(), lbl_boxes.cuda()
+            img, mask, boxes, lbl_boxes = img.to(device), mask.to(device), boxes.to(device), lbl_boxes.to(device)
 
             # forward
             pred_seg, pred_boxmask, pred_boxcoord = model(img)
