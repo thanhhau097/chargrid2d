@@ -1,3 +1,5 @@
+import os
+
 import torch
 import numpy as np
 
@@ -8,7 +10,7 @@ from model import Chargrid2D
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-def train():
+def train(weights_folder='weights'):
     N_EPOCHS = 100
     best_loss = np.infty
 
@@ -73,6 +75,9 @@ def train():
             loss = loss_fn(pred_seg, pred_boxmask, pred_boxcoord, mask, gt_boxmask, boxes)
             epoch_loss += loss.item()  # loss is mean loss of batch
             print("Step", i, 'loss =', loss.item())
+            if epoch_loss < best_loss:
+                best_loss = epoch_loss
+                torch.save(model.state_dict(), os.path.join(weights_folder, 'model_epoch_' + str(epoch) + '.pth'))
 
         print('Validation loss:', epoch_loss / len(val_dataloader))
 
