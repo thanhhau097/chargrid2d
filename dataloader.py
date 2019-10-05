@@ -100,7 +100,7 @@ class SegDataset(Dataset):
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
-        return img, mask, [], [], #boxes, lbl_boxes
+        return img, mask, boxes, lbl_boxes
 
     def visualize(self, img, mask):
         imgs = np.asarray(img)
@@ -127,6 +127,24 @@ class SegDataset(Dataset):
         plt.imshow(img)
         plt.show()
 
+    def collate_fn(self, batch):
+        images = list()
+        mask = list()
+        boxes = list()
+        lbl_boxes = list()
+
+        print(len(batch))
+        print('Lalalalalalalalalalalala')
+        for b in batch:
+            images.append(b[0])
+            mask.append(b[1])
+            boxes.append(b[2])
+            lbl_boxes.append(b[3])
+        
+        images = torch.stack(images, dim=0)
+        mask = torch.stack(mask, dim=0)
+
+        return images, mask, boxes, lbl_boxes
 
 class ChargridDataloader(BaseDataLoader):
     def __init__(self, root, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
@@ -170,12 +188,13 @@ if __name__ == "__main__":
     ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
     dataset = SegDataset('./data', transform=aug)
-    data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=dataset.collate_fn)
 
     for idx, sample in enumerate(data_loader):
         img, mask, boxes, lbl_boxes = sample
         print(img.size())
         print(mask.size())
+        print(lbl_boxes)
         # print(lbl_boxes)
         # for box, lbl_box in zip(boxes, lbl_boxes):
         #     print(box, '---------', lbl_box, '~~~~~~~~~~~~~~~')
