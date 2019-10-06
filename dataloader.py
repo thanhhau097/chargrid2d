@@ -87,13 +87,13 @@ class SegDataset(Dataset):
             augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
             img = augmented['image'].astype('int16')
             mask = augmented['mask'].astype('int16')
-            boxes = torch.tensor(augmented['bboxes'])
+            boxes = augmented['bboxes']
             lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
+            boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
             boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(np.array(lbl_boxes))
             # convert boxes to (4 x H x W)
-            boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
             # output_boxes = torch.zeros([4, img.size()[0], img.size()[1]])
             # for box in boxes:
 
@@ -143,6 +143,10 @@ class SegDataset(Dataset):
         
         images = torch.stack(images, dim=0)
         mask = torch.stack(mask, dim=0)
+        # boxes = torch.tensor(boxes)
+        # lbl_boxes = torch.tensor(lbl_boxes)
+
+        # print(lbl_boxes)
 
         return images, mask, boxes, lbl_boxes
 
@@ -159,10 +163,10 @@ class ChargridDataloader(BaseDataLoader):
         self.root = root
         self.size = image_size
         self.aug = alb.Compose([
-            alb.LongestMaxSize(524),
-            alb.PadIfNeeded(524, 524, border_mode=cv2.BORDER_CONSTANT),
-            alb.RandomCrop(512, 512, p=0.3),
-            alb.Resize(512, 512)
+            alb.LongestMaxSize(self.size + 24),
+            alb.PadIfNeeded(self.size + 24, self.size + 24, border_mode=cv2.BORDER_CONSTANT),
+            alb.RandomCrop(self.size, self.size, p=0.3),
+            alb.Resize(self.size, self.size)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
         dataset = SegDataset('./data', transform=self.aug)
@@ -173,22 +177,23 @@ class ChargridDataloader(BaseDataLoader):
             'shuffle': shuffle,
             'validation_split': validation_split,
             'num_workers': num_workers,
-            'collate_fn': collate_fn
+            'collate_fn': dataset.collate_fn
         }
 
         super(ChargridDataloader, self).__init__(**kwarg)
 
 
 if __name__ == "__main__":
+    size = 64
     aug = alb.Compose([
-        alb.LongestMaxSize(524),
-        alb.PadIfNeeded(524, 524, border_mode=cv2.BORDER_CONSTANT),
-        alb.RandomCrop(512, 512, p=0.3),
-        alb.Resize(512, 512)
+        alb.LongestMaxSize(size + 24),
+        alb.PadIfNeeded(size + 24, size + 24, border_mode=cv2.BORDER_CONSTANT),
+        alb.RandomCrop(size, size, p=0.3),
+        alb.Resize(size, size)
     ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
     dataset = SegDataset('./data', transform=aug)
-    data_loader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=dataset.collate_fn)
+    data_loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=dataset.collate_fn)
 
     for idx, sample in enumerate(data_loader):
         img, mask, boxes, lbl_boxes = sample
