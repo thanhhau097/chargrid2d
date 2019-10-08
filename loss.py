@@ -10,6 +10,8 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 # based on:
 # https://github.com/zhezh/focalloss/blob/master/focalloss.py
+
+
 class FocalLoss(nn.Module):
     r"""Criterion that computes Focal loss.
     According to [1], the Focal loss is computed as follows:
