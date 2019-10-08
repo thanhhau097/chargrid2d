@@ -18,7 +18,7 @@ from dataloader_utils.base_dataloader import BaseDataLoader
 
 
 class SegDataset(Dataset):
-    def __init__(self, root, size=(1024, 1024), transform=None):
+    def __init__(self, root, size=(512, 512), transform=None):
         super().__init__()
         self.root = root
         self.size = size
@@ -79,7 +79,7 @@ class SegDataset(Dataset):
         obj = read_json(obj_path)
 
         img = transforms.functional.to_pil_image(tensor)
-        img = np.asarray(img)
+        img = np.asarray(img) 
         mask = np.asarray(semantic)
         ori_boxes, label_boxes = self.__getobjcoor__(obj)
 
@@ -93,10 +93,7 @@ class SegDataset(Dataset):
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
             boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(np.array(lbl_boxes))
-            # convert boxes to (4 x H x W)
-            # output_boxes = torch.zeros([4, img.size()[0], img.size()[1]])
-            # for box in boxes:
-
+            
             img = img.unsqueeze(0)
             img = self.enc.process(img)
         
@@ -119,7 +116,6 @@ class SegDataset(Dataset):
     def visualize_box(self, img, boxes):
         for idx, bbox in enumerate(boxes):
             bbox = list(bbox)
-            print(bbox)
             x_min, y_min, w, h = bbox
             x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
             cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=(0, 0, 255), thickness=1)
@@ -133,8 +129,6 @@ class SegDataset(Dataset):
         boxes = list()
         lbl_boxes = list()
 
-        print(len(batch))
-        print('Lalalalalalalalalalalala')
         for b in batch:
             images.append(b[0])
             mask.append(b[1])
@@ -143,11 +137,7 @@ class SegDataset(Dataset):
         
         images = torch.stack(images, dim=0)
         mask = torch.stack(mask, dim=0)
-        # boxes = torch.tensor(boxes)
-        # lbl_boxes = torch.tensor(lbl_boxes)
-
-        # print(lbl_boxes)
-
+        
         return images, mask, boxes, lbl_boxes
 
 class ChargridDataloader(BaseDataLoader):
@@ -163,10 +153,10 @@ class ChargridDataloader(BaseDataLoader):
         self.root = root
         self.size = image_size
         self.aug = alb.Compose([
-            alb.LongestMaxSize(self.size + 24),
+            alb.LongestMaxSize(self.size + 24, interpolation=0),
             alb.PadIfNeeded(self.size + 24, self.size + 24, border_mode=cv2.BORDER_CONSTANT),
             alb.RandomCrop(self.size, self.size, p=0.3),
-            alb.Resize(self.size, self.size)
+            alb.Resize(self.size, self.size, interpolation=0)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
         dataset = SegDataset('./data', transform=self.aug)
