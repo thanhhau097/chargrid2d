@@ -5,7 +5,7 @@ import numpy as np
 
 from dataloader import ChargridDataloader
 from loss import ChargridLoss
-from model import Chargrid2D
+from model import SegmentationModel
 from metrics import IoU
 
 
@@ -20,7 +20,8 @@ def train(weights_folder='weights'):
     val_dataloader = dataloader.split_validation()
 
     loss_fn = ChargridLoss()
-    model = Chargrid2D(input_channels=len(dataloader.dataset.corpus) + 1, n_classes=len(dataloader.dataset.target))
+    # model = Chargrid2D(input_channels=len(dataloader.dataset.corpus) + 1, n_classes=len(dataloader.dataset.target))
+    model = SegmentationModel('hrnetv2', 'c1', 720, len(dataloader.dataset.corpus) + 1, len(dataloader.dataset.target))
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 

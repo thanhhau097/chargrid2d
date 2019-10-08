@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from utils import init_weights
+from models import ModelBuilder
 
 
 class Encoder(nn.Module):
@@ -307,11 +308,33 @@ class Chargrid2D(nn.Module):
         return y1, y2, y3
 
 
+class SegmentationModel(nn.Module):
+    def __init__(self, encoder_name, decoder_name, fc_dim, input_channels, output_channels):
+        super(SegmentationModel, self).__init__()
+
+        # Network Builders
+        self.net_encoder = ModelBuilder.build_encoder(
+            arch=encoder_name.lower(),
+            fc_dim=fc_dim)
+        self.net_decoder = ModelBuilder.build_decoder(
+            arch=decoder_name.lower(),
+            fc_dim=fc_dim,
+            num_class=output_channels)
+
+    def forward(self, x):
+        x = self.net_encoder(x, return_feature_maps=True)
+        x = self.net_decoder(x)
+        return x, torch.zeros([1, 1, 1, 1]), torch.zeros([1, 1, 1, 1])
+
+
 if __name__ == '__main__':
-    model = Chargrid2D(input_channels=302, n_classes=10)
+    import numpy as np
+    # model = Chargrid2D(input_channels=302, n_classes=10)
+    model = SegmentationModel('hrnetv2', 'c1', 720, 3, 10)
     x = torch.ones((1, 302, 512, 512))
-    y1, y2, y3 = model(x)
-    print(y1.size())
-    print(y2.size())
-    print(y3.size())
+    y = model(x)
+    print(y.size())
+    # print(y1.size())
+    # print(y2.size())
+    # print(y3.size())
 
