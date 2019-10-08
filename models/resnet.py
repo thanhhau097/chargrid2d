@@ -97,7 +97,7 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1000):
         self.inplanes = 128
         super(ResNet, self).__init__()
-        self.conv1 = conv3x3(3, 64, stride=2)
+        self.conv1 = conv3x3(302, 64, stride=2)
         self.bn1 = BatchNorm2d(64)
         self.relu1 = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(64, 64)
@@ -164,7 +164,7 @@ def resnet18(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
-    if pretrained:
+    if False:
         model.load_state_dict(load_url(model_urls['resnet18']))
     return model
 

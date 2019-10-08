@@ -330,7 +330,7 @@ class SegmentationModel(nn.Module):
 if __name__ == '__main__':
     import numpy as np
     # model = Chargrid2D(input_channels=302, n_classes=10)
-    model = SegmentationModel('hrnetv2', 'c1', 720, 3, 10)
+    model = SegmentationModel('resnet18dilated', 'c1_threeup', 512, 3, 10)
     x = torch.ones((1, 302, 512, 512))
     y, _, _ = model(x)
     print(y.size())

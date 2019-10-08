@@ -125,6 +125,11 @@ class ModelBuilder:
                 num_class=num_class,
                 fc_dim=fc_dim,
                 use_softmax=use_softmax)
+        elif arch == 'c1_threeup':
+            net_decoder = C1_threeup(
+                num_class=num_class,
+                fc_dim=fc_dim,
+                use_softmax=use_softmax)
         elif arch == 'ppm':
             net_decoder = PPM(
                 num_class=num_class,
@@ -398,6 +403,35 @@ class C1(nn.Module):
 
         return x
 
+# last conv
+class C1_threeup(nn.Module):
+    def __init__(self, num_class=150, fc_dim=2048, use_softmax=False):
+        super(C1_threeup, self).__init__()
+        self.use_softmax = use_softmax
+
+        self.cbr = conv3x3_bn_relu(fc_dim, fc_dim // 4, 1)
+        self.transpose1 = convTranspose_bn_relu(fc_dim // 4, fc_dim // 4)
+        self.transpose2 = convTranspose_bn_relu(fc_dim // 4, fc_dim // 4)
+        self.transpose3 = convTranspose_bn_relu(fc_dim // 4, fc_dim // 4)
+        # last conv
+        self.conv_last = nn.Conv2d(fc_dim // 4, num_class, 1, 1, 0)
+
+    def forward(self, conv_out, segSize=None):
+        conv5 = conv_out[-1]
+        x = self.cbr(conv5)
+        x = self.transpose1(x)
+        x = self.transpose2(x)
+        x = self.transpose3(x)
+        x = self.conv_last(x)
+
+        # if self.use_softmax: # is True during inference
+        #     x = nn.functional.interpolate(
+        #         x, size=segSize, mode='bilinear', align_corners=False)
+        #     x = nn.functional.softmax(x, dim=1)
+        # else:
+        #     x = nn.functional.log_softmax(x, dim=1)
+
+        return x
 
 # pyramid pooling
 class PPM(nn.Module):

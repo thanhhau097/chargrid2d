@@ -21,7 +21,7 @@ def train(weights_folder='weights'):
 
     loss_fn = ChargridLoss()
     # model = Chargrid2D(input_channels=len(dataloader.dataset.corpus) + 1, n_classes=len(dataloader.dataset.target))
-    model = SegmentationModel('hrnetv2', 'c1', 720, len(dataloader.dataset.corpus) + 1, len(dataloader.dataset.target))
+    model = SegmentationModel('resnet18dilated', 'c1_threeup', 512, len(dataloader.dataset.corpus) + 1, len(dataloader.dataset.target))
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
