@@ -92,7 +92,7 @@ class SegDataset(Dataset):
             lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
-            boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
+            # boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
             boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(
                 np.array(lbl_boxes))
 
@@ -196,6 +196,7 @@ if __name__ == "__main__":
 
     dataset = SegDataset('./data', 'train_files.txt', transform=aug)
     data_loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=dataset.collate_fn)
+    print(len(data_loader))
 
     for idx, sample in enumerate(data_loader):
         img, mask, boxes, lbl_boxes = sample
