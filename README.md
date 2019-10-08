@@ -3,6 +3,5 @@
 - Pytorch 1.2.0
 
 # TODO: 
-- Update predict function
-- Update training
-- Update test (evaluation)
+- Update post processing
+- Refactor module
