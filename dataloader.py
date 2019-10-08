@@ -19,12 +19,11 @@ from dataloader_utils.base_dataloader import BaseDataLoader
 
 class SegDataset(Dataset):
     def __init__(self, root, size=(512, 512), transform=None):
-        super().__init__()
         self.root = root
         self.size = size
         self.transform = transform
 
-        #input
+        # input
         self.lbl_fol = osp.join(root, 'labels')
         self.img_fol = osp.join(root, 'images')
 
@@ -35,10 +34,10 @@ class SegDataset(Dataset):
         self.target_path = osp.join(root, 'target.json')
         self.target2idx_path = osp.join(root, 'target2idx.json')
 
-        self.img_lst = glob.glob(osp.join(self.img_fol,  '*.png'))
-        self.tensor_lst = glob.glob(osp.join(self.tensor_fol,  '*.pt'))
-        self.semantic_lst = glob.glob(osp.join(self.semantic_fol,  '*.png'))
-        self.obj_lst = glob.glob(osp.join(self.obj_fol,  '*.json'))
+        self.img_lst = glob.glob(osp.join(self.img_fol, '*.png'))
+        self.tensor_lst = glob.glob(osp.join(self.tensor_fol, '*.pt'))
+        self.semantic_lst = glob.glob(osp.join(self.semantic_fol, '*.png'))
+        self.obj_lst = glob.glob(osp.join(self.obj_fol, '*.json'))
 
         self.idx2name = {}
         for idx, path in enumerate(self.tensor_lst):
@@ -79,7 +78,7 @@ class SegDataset(Dataset):
         obj = read_json(obj_path)
 
         img = transforms.functional.to_pil_image(tensor)
-        img = np.asarray(img) 
+        img = np.asarray(img)
         mask = np.asarray(semantic)
         ori_boxes, label_boxes = self.__getobjcoor__(obj)
 
@@ -92,27 +91,28 @@ class SegDataset(Dataset):
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
-            boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(np.array(lbl_boxes))
-            
+            boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(
+                np.array(lbl_boxes))
+
             img = img.unsqueeze(0)
             img = self.enc.process(img)
-        
+
         return img, mask, torch.tensor([]), torch.tensor([])  # boxes, lbl_boxes
 
     def visualize(self, img, mask):
         imgs = np.asarray(img)
         masks = np.asarray(mask)
 
-        debug = np.zeros((imgs.shape[1]*2, imgs.shape[0]*imgs.shape[2]))
+        debug = np.zeros((imgs.shape[1] * 2, imgs.shape[0] * imgs.shape[2]))
 
         for idx, img in enumerate(imgs):
-            debug[:img.shape[0], idx*img.shape[0]:(idx+1)*img.shape[1]] = img
+            debug[:img.shape[0], idx * img.shape[0]:(idx + 1) * img.shape[1]] = img
         for idx, mask in enumerate(masks):
-            debug[mask.shape[0]:, idx*mask.shape[0]:(idx+1)*mask.shape[1]] = 255 - mask
+            debug[mask.shape[0]:, idx * mask.shape[0]:(idx + 1) * mask.shape[1]] = 255 - mask
 
         plt.imshow(debug)
         plt.show()
-    
+
     def visualize_box(self, img, boxes):
         for idx, bbox in enumerate(boxes):
             bbox = list(bbox)
@@ -134,11 +134,12 @@ class SegDataset(Dataset):
             mask.append(b[1])
             boxes.append(b[2])
             lbl_boxes.append(b[3])
-        
+
         images = torch.stack(images, dim=0)
         mask = torch.stack(mask, dim=0)
-        
+
         return images, mask, boxes, lbl_boxes
+
 
 class ChargridDataloader(BaseDataLoader):
     def __init__(self, root, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
