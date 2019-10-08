@@ -66,4 +66,5 @@ def one_hot(labels: torch.Tensor,
                           device=device, dtype=dtype)
     return one_hot.scatter_(1, labels.unsqueeze(1), 1.0) + eps
 
-# TODO: write augmentation for training
+# TODO: post processing
+

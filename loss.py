@@ -10,6 +10,8 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 # based on:
 # https://github.com/zhezh/focalloss/blob/master/focalloss.py
+
+
 class FocalLoss(nn.Module):
     r"""Criterion that computes Focal loss.
     According to [1], the Focal loss is computed as follows:
@@ -106,8 +108,8 @@ def focal_loss(
 class ChargridLoss(nn.Module):
     def __init__(self):
         super(ChargridLoss, self).__init__()
-        self.loss_seg_fn = FocalLoss(alpha=0.25, gamma=2, reduction='mean')  # TODO: set hyper parameters
-        self.loss_box_mask_fn = FocalLoss(alpha=0.25, gamma=2, reduction='mean')
+        self.loss_seg_fn = FocalLoss(alpha=0.25, gamma=2, reduction='sum')  # TODO: set hyper parameters
+        self.loss_box_mask_fn = FocalLoss(alpha=0.25, gamma=2, reduction='sum')
         self.loss_boxcoord_fn = nn.SmoothL1Loss(size_average=True)
         # https://github.com/kuangliu/pytorch-retinanet/blob/master/loss.py
 
