@@ -15,7 +15,7 @@ def train(weights_folder='weights'):
     N_EPOCHS = 100
     best_loss = np.infty
 
-    dataloader = ChargridDataloader(root='data/', image_size=128, batch_size=1, validation_split=0.1)
+    dataloader = ChargridDataloader(root='data/', image_size=64, batch_size=4, validation_split=0.2)
     val_dataloader = dataloader.split_validation()
 
     loss_fn = ChargridLoss()
@@ -37,7 +37,7 @@ def train(weights_folder='weights'):
         for i, batch in enumerate(dataloader):
             # we need to get gt_seg, gt_boxmask, gt_boxcoord
             img, mask, boxes, lbl_boxes = batch
-            img, mask, boxes, lbl_boxes = img.to(device), mask.to(device), boxes.to(device), lbl_boxes.to(device)
+            img, mask = img.to(device), mask.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -53,12 +53,11 @@ def train(weights_folder='weights'):
             train_metrics.add(pred_seg, mask)
             epoch_loss += loss.item()  # loss is mean loss of batch
             print("Step", i, 'loss =', loss.item(), '\t cumulative iou =', train_metrics.value()[1])
-
             # backward
             loss.backward()
             optimizer.step()
 
-        print("Training loss:", epoch_loss / len(dataloader))
+        print(f"Epoch {epoch} Training loss: {epoch_loss / len(dataloader)}")
 
         # -------- EVALUATION -------
         model.eval()
@@ -68,7 +67,7 @@ def train(weights_folder='weights'):
         for i, batch in enumerate(val_dataloader):
             # we need to get gt_seg, gt_boxmask, gt_boxcoord
             img, mask, boxes, lbl_boxes = batch
-            img, mask, boxes, lbl_boxes = img.to(device), mask.to(device), boxes.to(device), lbl_boxes.to(device)
+            img, mask = img.to(device), mask.to(device)
 
             # forward
             pred_seg, pred_boxmask, pred_boxcoord = model(img)
@@ -86,7 +85,7 @@ def train(weights_folder='weights'):
                 best_loss = epoch_loss
                 torch.save(model.state_dict(), os.path.join(weights_folder, 'model_epoch_' + str(epoch) + '.pth'))
 
-        print('Validation loss:', epoch_loss / len(val_dataloader))
+        print(f'Epoch {epoch} Validation loss: {epoch_loss / len(val_dataloader)}')
 
 
 if __name__ == '__main__':

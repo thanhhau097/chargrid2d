@@ -77,6 +77,7 @@ class MaskGenerator():
             if len(self.corpus) > 300:
                 break
         write_json('data/corpus.json', self.corpus)
+        write_json('data/char2idx.json', self.char2idx)
 
         return self.corpus
 
@@ -129,7 +130,7 @@ class MaskGenerator():
         lbl_data = read_json(lbl_path)
         for item in lbl_data:
             w, h  = item['location'][2], item['location'][3]
-            char_w, char_h = int(w / (len(item['value'])+1)), int(h)
+            char_w, char_h = int(w / (len(item['value'])+1)), int(h) // 2
             cur_x, cur_y = int(item['location'][0]), int(item['location'][1])
             fm_key = item['formal_key']
             k_type = item['key_type']
@@ -215,7 +216,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     root = args.root_folder
-    # root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
+    root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
 
     lbl_fol = osp.join(root, 'processed_labels')
     img_fol = osp.join(root, 'images')
