@@ -18,8 +18,9 @@ from dataloader_utils.base_dataloader import BaseDataLoader
 
 
 class SegDataset(Dataset):
-    def __init__(self, root, size=(512, 512), transform=None):
+    def __init__(self, root, list_file_name_path, size=(512, 512), transform=None):
         self.root = root
+        self.list_file_name_path = list_file_name_path
         self.size = size
         self.transform = transform
 
@@ -34,10 +35,11 @@ class SegDataset(Dataset):
         self.target_path = osp.join(root, 'target.json')
         self.target2idx_path = osp.join(root, 'target2idx.json')
 
-        self.img_lst = glob.glob(osp.join(self.img_fol, '*.png'))
-        self.tensor_lst = glob.glob(osp.join(self.tensor_fol, '*.pt'))
-        self.semantic_lst = glob.glob(osp.join(self.semantic_fol, '*.png'))
-        self.obj_lst = glob.glob(osp.join(self.obj_fol, '*.json'))
+        self.file_names = self.get_file_names(self.root, self.list_file_name_path)
+        self.img_lst = self.get_category_file_paths(self.root, self.img_fol, self.file_names, '.png')
+        self.tensor_lst = self.get_category_file_paths(self.root, self.tensor_fol, self.file_names, '.pt')
+        self.semantic_lst = self.get_category_file_paths(self.root, self.semantic_fol, self.file_names, '.png')
+        self.obj_lst = self.get_category_file_paths(self.root, self.obj_fol, self.file_names, '.json')
 
         self.idx2name = {}
         for idx, path in enumerate(self.tensor_lst):
@@ -140,9 +142,18 @@ class SegDataset(Dataset):
 
         return images, mask, boxes, lbl_boxes
 
+    def get_file_names(self, root, list_file_name_path):
+        with open(os.path.join(root, list_file_name_path)) as f:
+            file_names = f.readlines()
+
+        return [name[:-1] for name in file_names]
+
+    def get_category_file_paths(self, root, folder, file_names, suffix):
+        return [os.path.join(root, folder, name) + suffix for name in file_names]
+
 
 class ChargridDataloader(BaseDataLoader):
-    def __init__(self, root, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
+    def __init__(self, root, list_file_name_path, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
         """
         Generate batch of items for training and validating
 
@@ -160,7 +171,7 @@ class ChargridDataloader(BaseDataLoader):
             alb.Resize(self.size, self.size, interpolation=0)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-        dataset = SegDataset('./data', transform=self.aug)
+        dataset = SegDataset('./data', list_file_name_path, transform=self.aug)
 
         kwarg = {
             'dataset': dataset,
@@ -183,7 +194,7 @@ if __name__ == "__main__":
         alb.Resize(size, size)
     ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-    dataset = SegDataset('./data', transform=aug)
+    dataset = SegDataset('./data', 'train_files.txt', transform=aug)
     data_loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=dataset.collate_fn)
 
     for idx, sample in enumerate(data_loader):
