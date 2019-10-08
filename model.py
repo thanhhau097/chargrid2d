@@ -332,7 +332,7 @@ if __name__ == '__main__':
     # model = Chargrid2D(input_channels=302, n_classes=10)
     model = SegmentationModel('hrnetv2', 'c1', 720, 3, 10)
     x = torch.ones((1, 302, 512, 512))
-    y = model(x)
+    y, _, _ = model(x)
     print(y.size())
     # print(y1.size())
     # print(y2.size())
