@@ -11,7 +11,7 @@ import torch
 
 from dataloader_utils.utils import make_folder, read_json, write_json, extract_info
 
-class MaskGenerator():
+class DataGenerator():
     def __init__(self):
         super().__init__()
         self.__all_char__ = {}
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     img_fol = osp.join(train_root, 'images')
     out_fol = './data'
 
-    mask_generator = MaskGenerator()
+    mask_generator = DataGenerator()
     mask_generator.process(lbl_fol, img_fol, out_fol, 'train')
 
     lbl_fol = osp.join(val_root, 'labels')

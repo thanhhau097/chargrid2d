@@ -3,9 +3,9 @@ import os
 import os.path as osp
 
 import albumentations as alb
-from matplotlib import pyplot as plt
-import numpy as np
 import cv2
+import numpy as np
+from matplotlib import pyplot as plt
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -13,43 +13,44 @@ from PIL import Image
 
 from dataloader_utils.utils import read_json
 from dataloader_utils.onehotencoder import OneHotEncoder
-from dataloader_utils.generate_mask import MaskGenerator
 from dataloader_utils.base_dataloader import BaseDataLoader
 
-
-class SegDataset(Dataset):
-    def __init__(self, root, list_file_name_path, size=(512, 512), transform=None):
-        self.root = root
-        self.list_file_name_path = list_file_name_path
-        self.size = size
-        self.transform = transform
-
-        # input
-        self.lbl_fol = osp.join(root, 'labels')
-        self.img_fol = osp.join(root, 'images')
-
-        self.tensor_fol = osp.join(root, 'tensor_input')
-        self.semantic_fol = osp.join(root, 'semantic_gt')
-        self.obj_fol = osp.join(root, 'obj_gt')
+class BaseDataset(Dataset):
+    def __init__(self, root):
         self.corpus_path = osp.join(root, 'corpus.json')
         self.target_path = osp.join(root, 'target.json')
         self.target2idx_path = osp.join(root, 'target2idx.json')
 
-        self.file_names = self.get_file_names(self.root, self.list_file_name_path)
-        self.img_lst = self.get_category_file_paths(self.root, self.img_fol, self.file_names, '.png')
-        self.tensor_lst = self.get_category_file_paths(self.root, self.tensor_fol, self.file_names, '.pt')
-        self.semantic_lst = self.get_category_file_paths(self.root, self.semantic_fol, self.file_names, '.png')
-        self.obj_lst = self.get_category_file_paths(self.root, self.obj_fol, self.file_names, '.json')
+        self.corpus = read_json(self.corpus_path)
+        self.target = read_json(self.target_path)
+        self.target2idx = read_json(self.target2idx_path)
+        self.enc = OneHotEncoder(self.corpus)
+
+
+class SegDataset(BaseDataset):
+    def __init__(self, root, size=(512, 512), transform=None, type='train'):
+        super().__init__(root)
+        self.root = osp.join(root, type)
+        self.size = size
+        self.transform = transform
+
+        # input
+        self.lbl_fol = osp.join(self.root, 'labels')
+        self.img_fol = osp.join(self.root, 'images')
+
+        self.tensor_fol = osp.join(self.root, 'tensor_input')
+        self.semantic_fol = osp.join(self.root, 'semantic_gt')
+        self.obj_fol = osp.join(self.root, 'obj_gt')
+
+        self.img_lst = glob.glob(osp.join(self.img_fol,  '*.png'))
+        self.tensor_lst = glob.glob(osp.join(self.tensor_fol,  '*.pt'))
+        self.semantic_lst = glob.glob(osp.join(self.semantic_fol,  '*.png'))
+        self.obj_lst = glob.glob(osp.join(self.obj_fol,  '*.json'))
 
         self.idx2name = {}
         for idx, path in enumerate(self.tensor_lst):
             name = osp.basename(path).split('.')[0]
             self.idx2name[idx] = name
-        self.corpus = read_json(self.corpus_path)
-        self.target = read_json(self.target_path)
-        self.target2idx = read_json(self.target2idx_path)
-        self.enc = OneHotEncoder(self.corpus)
-        self.datagenerator = MaskGenerator()
 
     def __len__(self):
         return len(self.tensor_lst)
@@ -93,37 +94,13 @@ class SegDataset(Dataset):
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             # boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
-            boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), torch.from_numpy(
-                np.array(lbl_boxes))
+            # boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), \
+            #                     torch.from_numpy(np.array(lbl_boxes))
 
             img = img.unsqueeze(0)
             img = self.enc.process(img)
 
         return img, mask, torch.tensor([]), torch.tensor([])  # boxes, lbl_boxes
-
-    def visualize(self, img, mask):
-        imgs = np.asarray(img)
-        masks = np.asarray(mask)
-
-        debug = np.zeros((imgs.shape[1] * 2, imgs.shape[0] * imgs.shape[2]))
-
-        for idx, img in enumerate(imgs):
-            debug[:img.shape[0], idx * img.shape[0]:(idx + 1) * img.shape[1]] = img
-        for idx, mask in enumerate(masks):
-            debug[mask.shape[0]:, idx * mask.shape[0]:(idx + 1) * mask.shape[1]] = 255 - mask
-
-        plt.imshow(debug)
-        plt.show()
-
-    def visualize_box(self, img, boxes):
-        for idx, bbox in enumerate(boxes):
-            bbox = list(bbox)
-            x_min, y_min, w, h = bbox
-            x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
-            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=(0, 0, 255), thickness=1)
-
-        plt.imshow(img)
-        plt.show()
 
     def collate_fn(self, batch):
         images = list()
@@ -141,16 +118,6 @@ class SegDataset(Dataset):
         mask = torch.stack(mask, dim=0)
 
         return images, mask, boxes, lbl_boxes
-
-    def get_file_names(self, root, list_file_name_path):
-        with open(os.path.join(root, list_file_name_path)) as f:
-            file_names = f.readlines()
-
-        return [name[:-1] for name in file_names]
-
-    def get_category_file_paths(self, root, folder, file_names, suffix):
-        return [os.path.join(root, folder, name) + suffix for name in file_names]
-
 
 class ChargridDataloader(BaseDataLoader):
     def __init__(self, root, list_file_name_path, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
@@ -186,28 +153,24 @@ class ChargridDataloader(BaseDataLoader):
 
 
 if __name__ == "__main__":
-    size = 64
+    size = 512
     aug = alb.Compose([
-        alb.LongestMaxSize(size + 24),
-        alb.PadIfNeeded(size + 24, size + 24, border_mode=cv2.BORDER_CONSTANT),
-        alb.RandomCrop(size, size, p=0.3),
-        alb.Resize(size, size)
-    ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
+            alb.LongestMaxSize(size + 24, interpolation=0),
+            alb.PadIfNeeded(size + 24, size + 24, border_mode=cv2.BORDER_CONSTANT),
+            alb.RandomCrop(size, size, p=0.3),
+            alb.Resize(size, size, interpolation=0)
+        ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-    dataset = SegDataset('./data', 'train_files.txt', transform=aug)
-    data_loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=dataset.collate_fn)
-    print(len(data_loader))
+    train_dataset = SegDataset('./data', transform=aug, type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=train_dataset.collate_fn)
+    print(len(train_dataloader))
 
-    for idx, sample in enumerate(data_loader):
+    val_dataset = SegDataset('./data', transform=aug, type='val')
+    val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=True, collate_fn=val_dataset.collate_fn)
+    print(len(val_dataloader))
+
+    for idx, sample in enumerate(val_dataloader):
         img, mask, boxes, lbl_boxes = sample
         print(img.size())
         print(mask.size())
         print(lbl_boxes)
-        # print(lbl_boxes)
-        # for box, lbl_box in zip(boxes, lbl_boxes):
-        #     print(box, '---------', lbl_box, '~~~~~~~~~~~~~~~')
-        # name = dataset.idx2name[idx]
-        # image_path = osp.join('D:/cinnamon/dataset/kyocera/S3/data/20190924/images', name + '.png')
-        # image = cv2.imread(image_path)
-        # dataset.visualize(img, mask)
-        # dataset.visualize_box(img, boxes)
