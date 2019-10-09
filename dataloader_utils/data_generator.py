@@ -20,10 +20,10 @@ class MaskGenerator():
         self.target = []
         self.target2idx = {}
 
-        self.path_lbls = None
-        self.path_std_lbls = None
-        self.path_imgs = None
-        self.path_lcs = None
+        self.path_lbls = []
+        self.path_std_lbls = []
+        self.path_imgs = []
+        self.path_lcs = []
 
         self.fol_debug_img = None
         self.fol_semantic_gt = None
@@ -213,8 +213,7 @@ class MaskGenerator():
         make_folder(self.fol_tensor_input)
         make_folder(self.fol_std_lbl)
 
-        if type.lower().strip() == 'train':
-            print('~~~~~~~~~~~~~Train~~~~~~~~~~~~~~')
+        if type.lower().strip() == 'val':
             self.path_lbls = []
             self.path_std_lbls = []
             self.path_imgs = []
