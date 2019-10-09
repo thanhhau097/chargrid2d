@@ -1,0 +1,5 @@
+{
+    "train_fol": "D:/cinnamon/dataset/kyocera/S3/data/20190924/fold_3/train",
+    "val_fol": "D:/cinnamon/dataset/kyocera/S3/data/20190924/fold_3/val"
+    
+}

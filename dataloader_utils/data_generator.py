@@ -14,15 +14,22 @@ from dataloader_utils.utils import make_folder, read_json, write_json, extract_i
 class MaskGenerator():
     def __init__(self):
         super().__init__()
-        self.__corpus__ = {}
-        self.char2idx = {}
-        self.target2idx = {}
+        self.__all_char__ = {}
         self.corpus = []
-        self.path_lbls = []
-        self.path_std_lbls = []
-        self.path_imgs = []
-        self.path_lcs = []
+        self.char2idx = {}
         self.target = []
+        self.target2idx = {}
+
+        self.path_lbls = None
+        self.path_std_lbls = None
+        self.path_imgs = None
+        self.path_lcs = None
+
+        self.fol_debug_img = None
+        self.fol_semantic_gt = None
+        self.fol_tensor_input = None
+        self.fol_obj_gt = None
+        self.fol_std_lbl = None
 
     def __convert_data(self, label_json):
         std_out = []
@@ -53,10 +60,10 @@ class MaskGenerator():
             
             ocr = region['region_attributes']['label']
             for char in ocr:
-                if char not in self.__corpus__:
-                    self.__corpus__[char] = 1
+                if char not in self.__all_char__:
+                    self.__all_char__[char] = 1
                 else:
-                    self.__corpus__[char] += 1
+                    self.__all_char__[char] += 1
                     
             std_out.append({
                 'value': ocr,
@@ -67,17 +74,17 @@ class MaskGenerator():
         
         return std_out
 
-    def __make_corpus(self):
-        x = self.__corpus__
+    def make_corpus(self, out_fol=None):
+        x = self.__all_char__
         
         sorted_x = sorted(x.items(), key=operator.itemgetter(1))[::-1]
         for idx, item in enumerate(sorted_x):
             self.corpus.append(item[0])
             self.char2idx[item[0]] = idx
-            if len(self.corpus) > 300:
+            if len(self.corpus) == 300:
                 break
-        write_json('data/corpus.json', self.corpus)
-        write_json('data/char2idx.json', self.char2idx)
+        write_json(osp.join(out_fol, 'corpus.json'), self.corpus)
+        write_json(osp.join(out_fol, 'char2idx.json'), self.char2idx)
 
         return self.corpus
 
@@ -87,35 +94,29 @@ class MaskGenerator():
         else:
             return 0
 
-    def get_corpus(self):
-        if len(self.corpus) == 0:
-            self.corpus = self.__make_corpus()
-        return self.corpus
-
     def convert_lbl(self, lbl_fol, std_lbl_fol):
         all_files = glob.glob(osp.join(lbl_fol, '*.json'))
 
         for idx, file_path in enumerate(all_files):
             name = osp.basename(file_path)
-            print(name)
             lbl_path = file_path
             img_path = osp.join(img_fol, name.replace('.json', '.png'))
             if not osp.exists(img_path):
-                img_path = osp.join(img_fol, name.replace('.json', '.jpg'))  
+                img_path = osp.join(img_fol, name.replace('.json', '.jpg'))
 
-            print(f'Converting data......File {idx}/Total {len(all_files)}....Progress: {int(idx/len(all_files)*100)}%')
             print(lbl_path)
             print(img_path)
+            print(f'Converting data......File {idx}/Total {len(all_files)}....Progress: {int(idx/len(all_files)*100)}%')
             if not osp.exists(lbl_path) or not osp.exists(img_path):
                 print('Image or Label is not exist')
-                exit
+                continue
             
             self.path_lbls.append(lbl_path)
             self.path_imgs.append(img_path)
+            self.path_std_lbls.append(osp.join(std_lbl_fol, name))
 
             lbl_data = self.__convert_data(read_json(lbl_path))
             write_json(osp.join(std_lbl_fol, name), lbl_data)
-            self.path_std_lbls.append(osp.join(std_lbl_fol, name))
     
     def __generate_object(self, img_path, lbl_path):
         name = osp.basename(img_path)
@@ -158,22 +159,22 @@ class MaskGenerator():
 
         return debug_img, tensor, gt, obj
 
-    def generate_mask(self, out_fol):
+    def generate_mask(self):
         for lbl_path, img_path in zip(self.path_std_lbls, self.path_imgs):
             debug_img, chargrid, semantic_gt, obj_gt = self.__generate_object(img_path, lbl_path)
             name = osp.basename(img_path)
             name = name.split('.')[0]
             print(name)
-            cv2.imwrite(osp.join('./data/debug', name + '.png'), debug_img)
-            cv2.imwrite(osp.join('./data/semantic_gt', name + '.png'), semantic_gt)
-            write_json(osp.join('./data/obj_gt', name + '.json'), obj_gt)
-            torch.save(chargrid, osp.join('./data/tensor_input', name + '.pt'))
+            cv2.imwrite(osp.join(self.fol_debug_img, name + '.png'), debug_img)
+            cv2.imwrite(osp.join(self.fol_semantic_gt, name + '.png'), semantic_gt)
+            write_json(osp.join(self.fol_obj_gt, name + '.json'), obj_gt)
+            torch.save(chargrid, osp.join(self.fol_tensor_input, name + '.pt'))
 
             # if __debug__:
             #     plt.imshow(debug_img)
             #     plt.show()
     
-    def generate_target(self):
+    def generate_target(self, out_fol):
         for lbl_path in self.path_std_lbls:
             lbl_data = read_json(lbl_path)
             for item in lbl_data:
@@ -190,38 +191,63 @@ class MaskGenerator():
         for idx, target in enumerate(self.target):
             self.target2idx[target] = idx
 
-        write_json('./data/target.json', self.target)
-        write_json('./data/target2idx.json', self.target2idx)
+        write_json(osp.join(out_fol, 'target.json'), self.target)
+        write_json(osp.join(out_fol, 'target2idx.json'), self.target2idx)
 
     def online_process(self, path):
         pass
 
-    def process(self, lbl_fol, img_fol, out_fol):
-        make_folder(out_fol)
-        make_folder('./data/debug')
-        make_folder('./data/semantic_gt')
-        make_folder('./data/tensor_input')
-        make_folder('./data/obj_gt')
+    def process(self, lbl_fol, img_fol, out_fol, type):
+        self.fol_debug_img = osp.join(out_fol, type, 'debug')
+        self.fol_semantic_gt = osp.join(out_fol, type, 'semantic_gt')
+        self.fol_tensor_input = osp.join(out_fol, type, 'tensor_input')
+        self.fol_obj_gt = osp.join(out_fol, type, 'obj_gt')
+        self.fol_std_lbl = osp.join(out_fol, type, 'standard_lbl')
 
-        self.convert_lbl(lbl_fol, out_fol)
-        self.get_corpus()
-        self.generate_target()
-        # self.generate_mask('.')
+        if not osp.exists(out_fol):
+            make_folder(out_fol)
+
+        make_folder(self.fol_debug_img)
+        make_folder(self.fol_semantic_gt)
+        make_folder(self.fol_obj_gt)
+        make_folder(self.fol_tensor_input)
+        make_folder(self.fol_std_lbl)
+
+        if type.lower().strip() == 'train':
+            print('~~~~~~~~~~~~~Train~~~~~~~~~~~~~~')
+            self.path_lbls = []
+            self.path_std_lbls = []
+            self.path_imgs = []
+            self.path_lcs = []
+
+        self.convert_lbl(lbl_fol, self.fol_std_lbl)
+
+        if type.lower() == 'train':
+            self.make_corpus(out_fol)
+            
+        self.generate_target(out_fol)
+        self.generate_mask()
         
 
 if __name__ == "__main__":
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root_folder', default='../data', type=str)
+    parser.add_argument('--config', type=str, required=True)
+    parser.add_argument('--type', type=str)
 
     args = parser.parse_args()
-    root = args.root_folder
-#     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
-
-    lbl_fol = osp.join(root, 'processed_labels')
-    img_fol = osp.join(root, 'images')
-    out_fol = osp.join('./data', 'standard_lbl')
+    config = read_json(args.config)
+    
+    train_root = config['train_fol']
+    val_root = config['val_fol']
+    
+    lbl_fol = osp.join(train_root, 'labels')
+    img_fol = osp.join(train_root, 'images')
+    out_fol = './data'
 
     mask_generator = MaskGenerator()
-    mask_generator.process(lbl_fol, img_fol, out_fol)
-    mask_generator.generate_mask('.')
+    mask_generator.process(lbl_fol, img_fol, out_fol, 'train')
+
+    lbl_fol = osp.join(val_root, 'labels')
+    img_fol = osp.join(val_root, 'images')
+    mask_generator.process(lbl_fol, img_fol, out_fol, 'val')

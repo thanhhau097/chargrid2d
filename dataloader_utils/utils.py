@@ -66,10 +66,10 @@ def extract_info(label_json):
     except:
         regions = label_json['attributes']['_via_img_metadata']['regions']
 
-    target_loc = []
-    target_label = []
-    target_fm_key = []
-    target_type_key = []
+    coors = []
+    texts = []
+    fm_keys = []
+    key_types = []
 
     for region in regions:
         if 'x' not in region['shape_attributes']:
@@ -87,11 +87,12 @@ def extract_info(label_json):
             continue
 
         try:
-            target_fm_key.append(region['region_attributes']['formal_key'].strip())
+            fm_keys.append(region['region_attributes']['formal_key'].strip())
         except:
-            target_fm_key.append(region['region_attributes']['key'].strip())
+            fm_keys.append(region['region_attributes']['key'].strip())
 
-        target_loc.append([x, y, x + width, y + height])
-        target_label.append(region['region_attributes']['label'])
-        target_type_key.append(key_type)
-    return target_loc, target_label, target_fm_key, target_type_key
+        coors.append([x, y, x + width, y + height])
+        texts.append(region['region_attributes']['label'])
+        key_types.append(key_type)
+        
+    return coors, texts, fm_keys, key_types
