@@ -75,7 +75,7 @@ class PredictProcedure():
 
         for item in textlines:
             w, h  = item['location'][2], item['location'][3]
-            char_w, char_h = int(w / (len(item['value'])+1)), int(h)
+            char_w, char_h = int(w / (len(item['value'])+1)), int(h) // 2
             cur_x, cur_y = int(item['location'][0]), int(item['location'][1])
               
             for char in item['value']:
@@ -125,6 +125,8 @@ class PredictProcedure():
             plt.show()
         else:
             return rgb
+        
+        return rgb
 
 
 
@@ -144,7 +146,7 @@ if __name__ == "__main__":
 
     corpus_path = './data/corpus.json' #args.corpus_path
     target_path = './data/target.json' #args.target_path
-    model_path =  './data/model_epoch_93.pth' #args.model_path
+    model_path =  './data/model_epoch_8.pth' #args.model_path
     make_folder('./data/debug_segment')
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})
@@ -156,13 +158,23 @@ if __name__ == "__main__":
         mask_path = osp.join('./data/semantic_gt', name + '.png')
         if not osp.exists(txtline_path) or not osp.exists(mask_path):
             continue
-        # mask = cv2.imread(mask_path, 0)
-        # augmented = predictor.aug(image=mask)
-        # mask = augmented['image'].astype('int16')
+        
         output = predictor.process(img_path, txtline_path)
-        print(output)
-        predictor.decode_segmap(output, name, True)
+        output -= 1
+        # predict = predictor.decode_segmap(output, name, False)
 
-        # predictor.decode_segmap(mask, name, False)
-        # plt.imshow(mask)
+        mask = cv2.imread(mask_path, 0)
+        doc_h, doc_w = 512, 512
+
+        augmented = predictor.aug(image=mask)
+        mask = augmented['image'].astype('int16')
+        # mask = predictor.decode_segmap(mask, name, False)
+
+        debug_img = np.zeros((512, 512*2))
+        debug_img[:, :doc_w] = output
+        debug_img[:, doc_w: ] = mask
+
+        debug_img = predictor.decode_segmap(debug_img, name, False)
+
+        # plt.imshow(debug_img)
         # plt.show()
