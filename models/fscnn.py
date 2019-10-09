@@ -33,6 +33,7 @@ class FastSCNN(nn.Module):
     def forward(self, x):
         size = x.size()[2:]
         higher_res_features = self.learning_to_downsample(x)
+        print('Higher res features', higher_res_features.size())
         x = self.global_feature_extractor(higher_res_features)
         x = self.feature_fusion(higher_res_features, x)
         x = self.classifier(x)
@@ -57,6 +58,7 @@ class _ConvBNReLU(nn.Module):
         )
 
     def forward(self, x):
+        print('ConvBNReLU', x.size())
         return self.conv(x)
 
 
@@ -179,9 +181,13 @@ class GlobalFeatureExtractor(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        print('Before bottleneck 1', x.size())
         x = self.bottleneck1(x)
+        print('Before bottleneck 2', x.size())
         x = self.bottleneck2(x)
+        print('Before bottleneck 3', x.size())
         x = self.bottleneck3(x)
+        print('Before PPM', x.size())
         x = self.ppm(x)
         return x
 

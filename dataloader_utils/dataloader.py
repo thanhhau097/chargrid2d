@@ -37,7 +37,6 @@ class SegDataset(BaseDataset):
         # input
         self.lbl_fol = osp.join(self.root, 'labels')
         self.img_fol = osp.join(self.root, 'images')
-
         self.tensor_fol = osp.join(self.root, 'tensor_input')
         self.semantic_fol = osp.join(self.root, 'semantic_gt')
         self.obj_fol = osp.join(self.root, 'obj_gt')
@@ -118,38 +117,6 @@ class SegDataset(BaseDataset):
         mask = torch.stack(mask, dim=0)
 
         return images, mask, boxes, lbl_boxes
-
-class ChargridDataloader(BaseDataLoader):
-    def __init__(self, root, list_file_name_path, image_size, batch_size, validation_split, num_workers=0, collate_fn=None, shuffle=True):
-        """
-        Generate batch of items for training and validating
-
-        :param root: data directory
-        :param image_size: size of image with training with batch
-        :param batch_size: number of images in one batch
-        :param shuffle: shuffle after each epoch
-        """
-        self.root = root
-        self.size = image_size
-        self.aug = alb.Compose([
-            alb.LongestMaxSize(self.size + 24, interpolation=0),
-            alb.PadIfNeeded(self.size + 24, self.size + 24, border_mode=cv2.BORDER_CONSTANT),
-            alb.RandomCrop(self.size, self.size, p=0.3),
-            alb.Resize(self.size, self.size, interpolation=0)
-        ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
-
-        dataset = SegDataset('./data', list_file_name_path, transform=self.aug)
-
-        kwarg = {
-            'dataset': dataset,
-            'batch_size': batch_size,
-            'shuffle': shuffle,
-            'validation_split': validation_split,
-            'num_workers': num_workers,
-            'collate_fn': dataset.collate_fn
-        }
-
-        super(ChargridDataloader, self).__init__(**kwarg)
 
 
 if __name__ == "__main__":

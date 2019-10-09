@@ -33,7 +33,7 @@ class MixSoftmaxCrossEntropyLoss(nn.CrossEntropyLoss):
 
 
 class SoftmaxCrossEntropyOHEMLoss(nn.Module):
-    def __init__(self, ignore_label=-1, thresh=0.7, min_kept=256, use_weight=True, **kwargs):
+    def __init__(self, ignore_label=-1, thresh=0.7, min_kept=256, use_weight=False, **kwargs):
         super(SoftmaxCrossEntropyOHEMLoss, self).__init__()
         self.ignore_label = ignore_label
         self.thresh = float(thresh)
