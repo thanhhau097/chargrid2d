@@ -48,7 +48,10 @@ class PredictProcedure():
         self.corpus = read_json(corpus_path)
         self.target = read_json(target_path)
         self.model = Chargrid2D(len(self.corpus) + 1, len(self.target))
-        self.model.load_state_dict(torch.load(model_path))
+        if kwargs['device'] == 'cpu':
+            self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
+        else:
+            self.model.load_state_dict(torch.load(model_path))
         self.device = kwargs['device']
         self.model.to(self.device)
 
@@ -133,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', type=str)
     parser.add_argument('--corpus_path', type=str)
     parser.add_argument('--target_path', type=str)
-    parser.add_argument('--gpu', type=bool)
+    parser.add_argument('--gpu', default=False, type=bool)
 
     args = parser.parse_args()
 
@@ -142,9 +145,9 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
 
-    corpus_path = './data/corpus.json' #args.corpus_path
-    target_path = './data/target.json' #args.target_path
-    model_path =  './data/model_epoch_93.pth' #args.model_path
+    corpus_path = './data/corpus.json'  #args.corpus_path
+    target_path = './data/target.json'  #args.target_path
+    model_path =  './weights/model_epoch_7.pth'  #args.model_path
     make_folder('./data/debug_segment')
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})
