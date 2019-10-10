@@ -292,7 +292,7 @@ class BoudingBoxRegressionDecoder(nn.Module):
 
 
 class Chargrid2D(nn.Module):
-    def __init__(self, input_channels, n_classes, n_a=1, base_channels=64):
+    def __init__(self, input_channels, n_classes, n_a=1, base_channels=16):
         super(Chargrid2D, self).__init__()
 
         self.encoder = Encoder(input_channels, base_channels)
