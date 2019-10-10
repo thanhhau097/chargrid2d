@@ -77,19 +77,19 @@ class SegDataset(BaseDataset):
 
         tensor = torch.load(tensor_path)
         semantic = Image.open(semantic_path)
-        obj = read_json(obj_path)
+        # obj = read_json(obj_path)
 
         img = transforms.functional.to_pil_image(tensor)
         img = np.asarray(img)
         mask = np.asarray(semantic)
-        ori_boxes, label_boxes = self.__getobjcoor__(obj)
+        # ori_boxes, label_boxes = self.__getobjcoor__(obj)
 
         if self.transform:
-            augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
+            augmented = self.transform(image=img, mask=mask)
             img = augmented['image'].astype('int16')
             mask = augmented['mask'].astype('int16')
-            boxes = augmented['bboxes']
-            lbl_boxes = augmented['lbl_id']
+            # boxes = augmented['bboxes']
+            # lbl_boxes = augmented['lbl_id']
 
             img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
             # boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
@@ -99,7 +99,7 @@ class SegDataset(BaseDataset):
             img = img.unsqueeze(0)
             img = self.enc.process(img)
 
-        return img, mask, torch.tensor([]), torch.tensor([])  # boxes, lbl_boxes
+        return img, mask  # boxes, lbl_boxes
 
     def collate_fn(self, batch):
         images = list()
@@ -126,18 +126,17 @@ if __name__ == "__main__":
             alb.PadIfNeeded(size + 24, size + 24, border_mode=cv2.BORDER_CONSTANT),
             alb.RandomCrop(size, size, p=0.3),
             alb.Resize(size, size, interpolation=0)
-        ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
+        ])
 
     train_dataset = SegDataset('./data', transform=aug, type='train')
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=train_dataset.collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
     print(len(train_dataloader))
 
     val_dataset = SegDataset('./data', transform=aug, type='val')
-    val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=True, collate_fn=val_dataset.collate_fn)
+    val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=True)
     print(len(val_dataloader))
 
-    for idx, sample in enumerate(val_dataloader):
-        img, mask, boxes, lbl_boxes = sample
+    for idx, sample in enumerate(train_dataloader):
+        img, mask = sample
         print(img.size())
         print(mask.size())
-        print(lbl_boxes)

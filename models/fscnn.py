@@ -33,7 +33,7 @@ class FastSCNN(nn.Module):
     def forward(self, x):
         size = x.size()[2:]
         higher_res_features = self.learning_to_downsample(x)
-        print('Higher res features', higher_res_features.size())
+        
         x = self.global_feature_extractor(higher_res_features)
         x = self.feature_fusion(higher_res_features, x)
         x = self.classifier(x)
@@ -58,7 +58,6 @@ class _ConvBNReLU(nn.Module):
         )
 
     def forward(self, x):
-        print('ConvBNReLU', x.size())
         return self.conv(x)
 
 
@@ -137,7 +136,7 @@ class PyramidPooling(nn.Module):
 
     def forward(self, x):
         size = x.size()[2:]
-        feat1 = self.upsample(self.conv1(self.pool(x, 1)), size)
+        feat1 = self.upsample(self.conv1(self.pool(x, 2)), size)
         feat2 = self.upsample(self.conv2(self.pool(x, 2)), size)
         feat3 = self.upsample(self.conv3(self.pool(x, 3)), size)
         feat4 = self.upsample(self.conv4(self.pool(x, 6)), size)
@@ -181,13 +180,13 @@ class GlobalFeatureExtractor(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        print('Before bottleneck 1', x.size())
+
         x = self.bottleneck1(x)
-        print('Before bottleneck 2', x.size())
+
         x = self.bottleneck2(x)
-        print('Before bottleneck 3', x.size())
+
         x = self.bottleneck3(x)
-        print('Before PPM', x.size())
+
         x = self.ppm(x)
         return x
 
@@ -239,7 +238,7 @@ class Classifer(nn.Module):
 
 
 if __name__ == '__main__':
-    img = torch.randn(2, 302, 256, 512)
+    img = torch.randn(1, 302, 512, 512)
     model = FastSCNN(302, 24, True)
 
     model = model.to('cuda:0')

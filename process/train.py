@@ -47,7 +47,7 @@ def parse_args():
     # evaluation only
     parser.add_argument('--eval', action='store_true', default=False,
                         help='evaluation only')
-    parser.add_argument('--no-val', action='store_true', default=True,
+    parser.add_argument('--no-val', action='store_true', default=False,
                         help='skip validation during training')
     # the parser
     args = parser.parse_args()
@@ -67,14 +67,15 @@ class Trainer(object):
             alb.PadIfNeeded(self.args.size + 24, self.args.size + 24, border_mode=cv2.BORDER_CONSTANT),
             alb.RandomCrop(self.args.size, self.args.size, p=0.3),
             alb.Resize(self.args.size, self.args.size, interpolation=0)
-        ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
+        ])
 
         train_dataset = SegDataset(self.args.root, transform=aug, type='train')
-        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=train_dataset.collate_fn)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=4)
         print(len(self.train_loader))
 
         val_dataset = SegDataset(self.args.root, transform=aug, type='val')
-        self.val_loader = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=val_dataset.collate_fn)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=2)
+        # self.train_loader = self.val_loader
         print(len(self.val_loader))
 
         # create network
@@ -107,12 +108,14 @@ class Trainer(object):
         self.best_pred = 0.0
 
     def train(self):
-        cur_iters = 0
         start_time = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.model.train()
+            epoch_loss = 0.0
 
-            for i, (images, targets, _, _) in enumerate(self.train_loader):
+            for i, (images, targets) in enumerate(self.train_loader):
+                if images.size()[0] == 1:
+                    continue
                 images = images.to(self.args.device)
                 targets = targets.to(self.args.device)
 
@@ -121,12 +124,11 @@ class Trainer(object):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+                epoch_loss += loss.item()
 
-                cur_iters += 1
-                if cur_iters % 10 == 0:
-                    print('Epoch: [%2d/%2d] Iter [%4d/%4d] || Time: %4.4f sec || Loss: %.4f' % ( \
-                        epoch, args.epochs, i + 1, len(self.train_loader), \
-                        time.time() - start_time, loss.item()))
+            print('Epoch: [%2d/%2d] || Time: %4.4f sec || Loss: %.4f' % ( \
+                epoch, args.epochs, \
+                time.time() - start_time, epoch_loss))
 
             if self.args.no_val:
                 # save every epoch
@@ -163,13 +165,13 @@ def save_checkpoint(model, args, is_best=False):
     directory = os.path.expanduser(args.save_folder)
     if not os.path.exists(directory):
         os.makedirs(directory)
-    filename = '{}_{}.pth'.format(args.model, args.dataset)
+    filename = 'model.pth'
     save_path = os.path.join(directory, filename)
     torch.save(model.state_dict(), save_path)
     if is_best:
-        best_filename = '{}_{}_best_model.pth'.format(args.model, args.dataset)
+        best_filename = 'best_model.pth'
         best_filename = os.path.join(directory, best_filename)
-        shutil.copyfile(filename, best_filename)
+        torch.save(model.state_dict(), best_filename)
 
 if __name__ == "__main__":
     args = parse_args()
