@@ -58,7 +58,7 @@ def train(weights_folder='weights'):
             loss.backward()
             optimizer.step()
 
-        print(f"Epoch {epoch} Training loss: {epoch_loss / len(dataloader)}")
+        print("Epoch {} Training loss: {}".format(epoch, epoch_loss / len(dataloader)))
 
         # -------- EVALUATION -------
         model.eval()
@@ -86,7 +86,7 @@ def train(weights_folder='weights'):
                 best_loss = epoch_loss
                 torch.save(model.state_dict(), os.path.join(weights_folder, 'model_epoch_' + str(epoch) + '.pth'))
 
-        print(f'Epoch {epoch} Validation loss: {epoch_loss / len(val_dataloader)}')
+        print("Epoch {} Training loss: {}".format(epoch, epoch_loss / len(dataloader)))
 
 
 if __name__ == '__main__':
