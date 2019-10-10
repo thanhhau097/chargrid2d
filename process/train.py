@@ -174,6 +174,7 @@ def save_checkpoint(model, args, is_best=False):
         torch.save(model.state_dict(), best_filename)
 
 if __name__ == "__main__":
+    # python process/train.py --size 512 --batch-size X
     args = parse_args()
     trainer = Trainer(args)
     if args.eval:
