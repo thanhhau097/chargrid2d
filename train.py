@@ -86,7 +86,7 @@ def train(weights_folder='weights'):
                 best_loss = epoch_loss
                 torch.save(model.state_dict(), os.path.join(weights_folder, 'model_epoch_' + str(epoch) + '.pth'))
 
-        print("Epoch {} Training loss: {}".format(epoch, epoch_loss / len(dataloader)))
+        print("Epoch {} validation loss: {}".format(epoch, epoch_loss / len(dataloader)))
 
 
 if __name__ == '__main__':
