@@ -70,16 +70,16 @@ class Trainer(object):
         ])
 
         train_dataset = SegDataset(self.args.root, transform=aug, type='train')
-        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=4)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=1)
         print(len(self.train_loader))
 
         val_dataset = SegDataset(self.args.root, transform=aug, type='val')
-        self.val_loader = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=2)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=1)
         # self.train_loader = self.val_loader
         print(len(self.val_loader))
 
         # create network
-        self.model = FastSCNN(in_channels=len(train_dataset.corpus)+1, num_classes=len(train_dataset.target), aux=True)
+        self.model = FastSCNN(in_channels=len(train_dataset.corpus)+1, num_classes=len(train_dataset.target) + 1, aux=self.args.aux)
         # if torch.cuda.device_count() > 1:
         #     self.model = torch.nn.DataParallel(self.model, device_ids=[0, 1, 2])
         self.model.to(args.device)
@@ -93,8 +93,7 @@ class Trainer(object):
                 self.model.load_state_dict(torch.load(args.resume, map_location=lambda storage, loc: storage))
 
         # create criterion
-        self.criterion = MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight,
-                                                        ignore_index=0).to(args.device)
+        self.criterion = MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight).to(args.device)
 
         # optimizer
         self.optimizer = torch.optim.SGD(self.model.parameters(),

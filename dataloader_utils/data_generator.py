@@ -189,7 +189,7 @@ class DataGenerator():
                     self.target.append(cl)
         self.target = sorted(self.target)
         for idx, target in enumerate(self.target):
-            self.target2idx[target] = idx
+            self.target2idx[target] = idx + 1
 
         write_json(osp.join(out_fol, 'target.json'), self.target)
         write_json(osp.join(out_fol, 'target2idx.json'), self.target2idx)
