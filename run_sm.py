@@ -8,7 +8,10 @@ output_path = 's3://prj-kyocera/research/output'
 code_location = 's3://prj-kyocera/research/src'
 role = "arn:aws:iam::533155507761:role/service-role/AmazonSageMaker-ExecutionRole-20190312T160681"
 source_dir = "."
-hyperparams = {'configs': "./configs/graphkv_sm.json", 'preprocess': True}
+hyperparams = {'size': 512, 
+                'root': '/opt/ml/input/data/train',
+                'aux': True,
+                'batch-size': 4}
 
 tf_estimator = PyTorch(entry_point='./process/train.py',
                             source_dir=".",

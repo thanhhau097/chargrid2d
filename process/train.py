@@ -1,4 +1,9 @@
 import os
+
+import subprocess
+subprocess.run('pip install -r ./process/requirement.txt', shell=True)
+print(os.listdir('/opt/ml/input/data/train'))
+
 import argparse
 import time
 import shutil
