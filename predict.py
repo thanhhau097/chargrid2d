@@ -48,10 +48,10 @@ class PredictProcedure():
         self.corpus = read_json(corpus_path)
         self.target = read_json(target_path)
         self.model = Chargrid2D(len(self.corpus) + 1, len(self.target))
-        if kwargs['device'] == 'cpu':
-            self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
-        else:
-            self.model.load_state_dict(torch.load(model_path))
+        # if kwargs['device'] == 'cpu':
+        #     self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
+        # else:
+        #     self.model.load_state_dict(torch.load(model_path))
         self.device = kwargs['device']
         self.model.to(self.device)
 
@@ -152,20 +152,20 @@ if __name__ == "__main__":
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})
 
-    for img_path in glob.glob('./data/images/*.png'):
-        name = osp.basename(img_path).replace('.png', '')
+    for img_path in glob.glob('./data/sroie/images/*.jpg'):
+        name = osp.basename(img_path).replace('.jpg', '')
         print(name)
         txtline_path = osp.join('./data/standard_lbl', name + '.json')
         mask_path = osp.join('./data/semantic_gt', name + '.png')
         if not osp.exists(txtline_path) or not osp.exists(mask_path):
             continue
-        # mask = cv2.imread(mask_path, 0)
+        mask = cv2.imread(mask_path, 0)
         # augmented = predictor.aug(image=mask)
         # mask = augmented['image'].astype('int16')
-        output = predictor.process(img_path, txtline_path)
-        print(output)
-        predictor.decode_segmap(output, name, True)
+        # output = predictor.process(img_path, txtline_path)
+        # print(output)
+        # predictor.decode_segmap(output, name, True)
 
-        # predictor.decode_segmap(mask, name, False)
+        predictor.decode_segmap(mask, name, True)
         # plt.imshow(mask)
         # plt.show()

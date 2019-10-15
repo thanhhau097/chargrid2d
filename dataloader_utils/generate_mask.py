@@ -71,6 +71,12 @@ class MaskGenerator():
         std_out = []
 
         for item in label_json:
+            for char in item['text']:
+                if char not in self.__corpus__:
+                    self.__corpus__[char] = 1
+                else:
+                    self.__corpus__[char] += 1
+
             std_out.append({
                 'value': item['text'],
                 'formal_key': item['class'],
