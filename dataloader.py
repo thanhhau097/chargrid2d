@@ -83,7 +83,7 @@ class SegDataset(Dataset):
         img = np.asarray(img)
         mask = np.asarray(semantic)
         ori_boxes, label_boxes = self.__getobjcoor__(obj)
-        ori_boxes = ori_boxes - 1
+        ori_boxes[-1] = ori_boxes[-1] - 1
 
         if self.transform:
             augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
