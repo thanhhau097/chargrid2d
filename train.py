@@ -15,7 +15,7 @@ def train(weights_folder='weights'):
     N_EPOCHS = 100
     best_loss = np.infty
 
-    dataloader = ChargridDataloader(root='data/', list_file_name_path='train_files.txt',
+    dataloader = ChargridDataloader(root='data/sroie/', list_file_name_path='train_files.txt',
                                     image_size=512, batch_size=1, validation_split=0.1)
     val_dataloader = dataloader.split_validation()
 
