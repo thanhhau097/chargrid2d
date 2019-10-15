@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     corpus_path = './data/corpus.json'  #args.corpus_path
     target_path = './data/target.json'  #args.target_path
-    model_path =  './weights/model_epoch_7.pth'  #args.model_path
+    model_path =  './weights/model_epoch_56.pth'  #args.model_path
     make_folder('./data/debug_segment')
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})

@@ -32,7 +32,7 @@ class MaskGenerator():
                 regions = item['regions']
         except:
             regions = label_json['attributes']['_via_img_metadata']['regions']
-        
+
         for region in regions:
             if 'x' not in region['shape_attributes']:
                 continue
@@ -50,22 +50,36 @@ class MaskGenerator():
                 fm_key = region['region_attributes']['formal_key'].strip()
             except:
                 fm_key = region['region_attributes']['key'].strip()
-            
+
             ocr = region['region_attributes']['label']
             for char in ocr:
                 if char not in self.__corpus__:
                     self.__corpus__[char] = 1
                 else:
                     self.__corpus__[char] += 1
-                    
+
             std_out.append({
                 'value': ocr,
                 'formal_key': fm_key,
                 'key_type': key_type,
                 'location': [x, y, width, height]
             })
-        
+
         return std_out
+
+    def __convert_data_sroie(self, label_json):
+        std_out = []
+
+        for item in label_json:
+            std_out.append({
+                'value': item['text'],
+                'formal_key': item['class'],
+                'key_type': 'value',
+                'location': item['box']
+            })
+
+        return std_out
+
 
     def __make_corpus(self):
         x = self.__corpus__
@@ -113,7 +127,7 @@ class MaskGenerator():
             self.path_lbls.append(lbl_path)
             self.path_imgs.append(img_path)
 
-            lbl_data = self.__convert_data(read_json(lbl_path))
+            lbl_data = self.__convert_data_sroie(read_json(lbl_path))
             write_json(osp.join(std_lbl_fol, name), lbl_data)
             self.path_std_lbls.append(osp.join(std_lbl_fol, name))
     
@@ -212,13 +226,13 @@ class MaskGenerator():
 if __name__ == "__main__":
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root_folder', default='../data', type=str)
+    parser.add_argument('--root_folder', default='../data/sroie', type=str)
 
     args = parser.parse_args()
     root = args.root_folder
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
 
-    lbl_fol = osp.join(root, 'processed_labels')
+    lbl_fol = osp.join(root, 'labels')
     img_fol = osp.join(root, 'images')
     out_fol = osp.join('./data', 'standard_lbl')
 
