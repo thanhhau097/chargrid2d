@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--root', type=str, default='./data',
                         help='root data folder')
     # training hyper params
-    parser.add_argument('--aux', action='store_true', default=True,
+    parser.add_argument('--aux', action='store_true', default=False,
                         help='Auxiliary loss')
     parser.add_argument('--aux-weight', type=float, default=0.4,
                         help='auxiliary loss weight')
@@ -39,7 +39,7 @@ def parse_args():
                         metavar='N', help='start epochs (default:0)')
     parser.add_argument('--batch-size', type=int, default=2,
                         metavar='N', help='input batch size for training (default: 12)')
-    parser.add_argument('--lr', type=float, default=1e-2, metavar='LR',
+    parser.add_argument('--lr', type=float, default=1e-4, metavar='LR',
                         help='learning rate (default: 1e-2)')
     parser.add_argument('--momentum', type=float, default=0.9,
                         metavar='M', help='momentum (default: 0.9)')
@@ -48,13 +48,11 @@ def parse_args():
     # checking point
     parser.add_argument('--resume', type=str, default=None,
                         help='put the path to resuming file if needed')
-    parser.add_argument('--save-folder', default='./weights',
+    parser.add_argument('--model-dir', default='./weights',
                         help='Directory for saving checkpoint models')
     # evaluation only
     parser.add_argument('--eval', action='store_true', default=False,
                         help='evaluation only')
-    parser.add_argument('--no-val', action='store_true', default=False,
-                        help='skip validation during training')
     # the parser
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -76,7 +74,7 @@ class Trainer(object):
         ])
 
         train_dataset = SegDataset(self.args.root, transform=aug, type='train')
-        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=8, drop_last=True)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=1, drop_last=True)
         print(len(self.train_loader))
 
         val_dataset = SegDataset(self.args.root, transform=aug, type='val')
@@ -99,17 +97,16 @@ class Trainer(object):
                 self.model.load_state_dict(torch.load(args.resume, map_location=lambda storage, loc: storage))
 
         # create criterion
-        self.criterion = FocalLoss(0.25, 2, 'mean')
+        self.criterion = FocalLoss(0.25, 2, 'sum')
             #MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight).to(args.device)
 
         # optimizer
-        self.optimizer = torch.optim.SGD(self.model.parameters(),
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
                                          lr=args.lr,
-                                         momentum=args.momentum,
                                          weight_decay=args.weight_decay)
         
         # evaluation metrics
-        self.metric = SegmentationMetric(len(train_dataset.target))
+        self.metric = SegmentationMetric(len(train_dataset.target) + 1)
 
         self.best_pred = 0.0
 
@@ -134,10 +131,7 @@ class Trainer(object):
                 epoch, args.epochs, \
                 time.time() - start_time, epoch_loss))
 
-            if self.args.no_val:
-                # save every epoch
-                save_checkpoint(self.model, self.args, is_best=False)
-            else:
+            if epoch % 1 == 0:
                 self.validation(epoch)
 
         save_checkpoint(self.model, self.args, is_best=False)
@@ -146,12 +140,14 @@ class Trainer(object):
         is_best = False
         self.metric.reset()
         self.model.eval()
+
         for i, (image, target) in enumerate(self.val_loader):
             image = image.to(self.args.device)
 
             outputs = self.model(image)
             pred = torch.argmax(outputs[0], 1)
             pred = pred.cpu().data.numpy()
+            
             self.metric.update(pred, target.numpy())
             pixAcc, mIoU = self.metric.get()
             print('Epoch %d, Sample %d, validation pixAcc: %.3f%%, mIoU: %.3f%%' % (
@@ -166,12 +162,13 @@ class Trainer(object):
 
 def save_checkpoint(model, args, is_best=False):
     """Save Checkpoint"""
-    directory = os.path.expanduser(args.save_folder)
+    directory = args.model_dir
     if not os.path.exists(directory):
         os.makedirs(directory)
     filename = 'model.pth'
     save_path = os.path.join(directory, filename)
     torch.save(model.state_dict(), save_path)
+
     if is_best:
         best_filename = 'best_model.pth'
         best_filename = os.path.join(directory, best_filename)

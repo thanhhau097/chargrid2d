@@ -1,0 +1,7 @@
+albumentation
+torch
+torchvision
+numpy
+sklearn
+cv2
+matplotlib
