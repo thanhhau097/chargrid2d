@@ -61,8 +61,8 @@ class SegDataset(Dataset):
         for line in obj:
             coor = line['box']
             c_x, c_y, w, h = coor
-            w += 0.001
-            h += 0.001
+            # w += 0.001
+            # h += 0.001
             boxes.append([c_x, c_y, w, h])
             labels.append(self.target2idx[line['class']])
 
@@ -83,7 +83,7 @@ class SegDataset(Dataset):
         img = np.asarray(img)
         mask = np.asarray(semantic)
         ori_boxes, label_boxes = self.__getobjcoor__(obj)
-        ori_boxes[-1] = ori_boxes[-1] - 1
+        ori_boxes = ori_boxes
 
         if self.transform:
             augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
