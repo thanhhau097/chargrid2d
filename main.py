@@ -26,7 +26,7 @@ class SagemakerInference(object):
     def process(self):
         os.system('nvidia-smi')
         print("RUN TRAIN.PY FILE")
-        subprocess.run('python train.py --size 1024 --root /opt/ml/input/data/train --batch-size 8', shell=True)
+        subprocess.run('python train.py --size 768 --model-dir /opt/ml/model --root /opt/ml/input/data/train --batch-size 4', shell=True)
 
 
 if __name__ == '__main__':
