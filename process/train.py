@@ -1,8 +1,8 @@
 import os
 
 import subprocess
-subprocess.run('pip install -r ./process/requirement.txt', shell=True)
-print(os.listdir('/opt/ml/input/data/train'))
+# subprocess.run('pip install -r ./process/requirement.txt', shell=True)
+# print(os.listdir('/opt/ml/input/data/train'))
 
 import argparse
 import time
@@ -11,13 +11,14 @@ import shutil
 import albumentations as alb
 import cv2
 import torch
+from torch import nn
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
 from dataloader_utils.dataloader import SegDataset
 from models.fscnn import FastSCNN
-from utils.loss import MixSoftmaxCrossEntropyLoss, MixSoftmaxCrossEntropyOHEMLoss
+from utils.loss import MixSoftmaxCrossEntropyLoss, MixSoftmaxCrossEntropyOHEMLoss, FocalLoss
 from utils.metric import SegmentationMetric
 
 def parse_args():
@@ -75,7 +76,7 @@ class Trainer(object):
         ])
 
         train_dataset = SegDataset(self.args.root, transform=aug, type='train')
-        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=1)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=8, drop_last=True)
         print(len(self.train_loader))
 
         val_dataset = SegDataset(self.args.root, transform=aug, type='val')
@@ -98,7 +99,8 @@ class Trainer(object):
                 self.model.load_state_dict(torch.load(args.resume, map_location=lambda storage, loc: storage))
 
         # create criterion
-        self.criterion = MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight).to(args.device)
+        self.criterion = FocalLoss(0.25, 2, 'mean')
+            #MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight).to(args.device)
 
         # optimizer
         self.optimizer = torch.optim.SGD(self.model.parameters(),
@@ -118,13 +120,11 @@ class Trainer(object):
             epoch_loss = 0.0
 
             for i, (images, targets) in enumerate(self.train_loader):
-                if images.size()[0] == 1:
-                    continue
                 images = images.to(self.args.device)
                 targets = targets.to(self.args.device)
 
                 outputs = self.model(images)
-                loss = self.criterion(outputs, targets)
+                loss = self.criterion(outputs[0], targets)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()

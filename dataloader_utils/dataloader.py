@@ -91,7 +91,7 @@ class SegDataset(BaseDataset):
             # boxes = augmented['bboxes']
             # lbl_boxes = augmented['lbl_id']
 
-            img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask)
+            img, mask = torch.from_numpy(img).type(torch.LongTensor), torch.from_numpy(mask).type(torch.LongTensor)
             # boxes = np.swapaxes(boxes, 0, 1)  # x_min, y_min, width, height -> we need to return 4 coordinates
             # boxes, lbl_boxes = torch.from_numpy(np.array(boxes)).type(torch.LongTensor), \
             #                     torch.from_numpy(np.array(lbl_boxes))
