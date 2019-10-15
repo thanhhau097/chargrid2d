@@ -171,7 +171,7 @@ class ChargridDataloader(BaseDataLoader):
             alb.Resize(self.size, self.size, interpolation=0)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-        dataset = SegDataset('./data', list_file_name_path, transform=self.aug)
+        dataset = SegDataset(root, list_file_name_path, transform=self.aug)
 
         kwarg = {
             'dataset': dataset,
