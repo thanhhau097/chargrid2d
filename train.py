@@ -24,13 +24,13 @@ def train(weights_folder='weights'):
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    # metrics
-    train_metrics = IoU(len(dataloader.dataset.target), ignore_index=0)
-    val_metrics = IoU(len(dataloader.dataset.target), ignore_index=0)
-
     for epoch in range(N_EPOCHS):
         print('Epoch {}/{}'.format(epoch, N_EPOCHS - 1))
         print('-' * 10)
+
+        # metrics
+        train_metrics = IoU(len(dataloader.dataset.target), ignore_index=0)
+        val_metrics = IoU(len(dataloader.dataset.target), ignore_index=0)
 
         # -------- TRAIN -------
         model.train()

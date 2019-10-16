@@ -48,10 +48,10 @@ class PredictProcedure():
         self.corpus = read_json(corpus_path)
         self.target = read_json(target_path)
         self.model = Chargrid2D(len(self.corpus) + 1, len(self.target))
-        # if kwargs['device'] == 'cpu':
-        #     self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
-        # else:
-        #     self.model.load_state_dict(torch.load(model_path))
+        if kwargs['device'] == 'cpu':
+            self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
+        else:
+            self.model.load_state_dict(torch.load(model_path))
         self.device = kwargs['device']
         self.model.to(self.device)
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     corpus_path = './data/sroie/corpus.json'  #args.corpus_path
     target_path = './data/sroie/target.json'  #args.target_path
-    model_path =  './weights/model_epoch_56.pth'  #args.model_path
+    model_path =  './weights/model_epoch_10.pth'  #args.model_path
     make_folder('./data/sroie/debug_segment')
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/sroie/char2idx.json'})
@@ -176,16 +176,18 @@ if __name__ == "__main__":
         #
         # # augmented = predictor.aug(image=mask)
         # # mask = augmented['image'].astype('int16')
-        # # output = predictor.process(img_path, txtline_path)
-        # # print(output)
-        # # predictor.decode_segmap(output, name, True)
-        #
+        output = predictor.process(img_path, txtline_path)
+        print(output)
+        predictor.decode_segmap(output, name, True)
+
         # predictor.decode_segmap(mask, name, True)
         # # plt.imshow(mask)
         # # plt.show()
-        tensor = torch.load(tensor_path)
-        input_arr = tensor.numpy()
-        input_arr = squarify(input_arr, 0)
-        # plt.imshow(input_arr)
-        # plt.show()
-        print(tensor.max())
+
+
+        # tensor = torch.load(tensor_path)
+        # input_arr = tensor.numpy()
+        # input_arr = squarify(input_arr, 0)
+        # # plt.imshow(input_arr)
+        # # plt.show()
+        # print(tensor.max())
