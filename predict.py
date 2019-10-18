@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     corpus_path = './data/sroie/corpus.json'  #args.corpus_path
     target_path = './data/sroie/target.json'  #args.target_path
-    model_path =  './weights/model_epoch_10.pth'  #args.model_path
+    model_path =  './weights/model_epoch_80.pth'  #args.model_path
     make_folder('./data/sroie/debug_segment')
 
     predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/sroie/char2idx.json'})
