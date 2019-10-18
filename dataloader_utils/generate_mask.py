@@ -247,8 +247,21 @@ class MaskGenerator():
         :param label_dict: dictionary of ground truth [{'text': 'ground_truth_text', 'box': [x, y , width, height]}]
         :return:
         """
-        pass
-        
+        doc_h, doc_w = image.shape[:2]
+        mask = np.zeros((doc_h, doc_w), dtype='int16')
+
+        for item in label_dict:
+            w, h = item['box'][2], item['box'][3]
+            char_w, char_h = int(w / (len(item['text']) + 1)), int(h) // 2
+            cur_x, cur_y = int(item['box'][0]), int(item['box'][1])
+
+            for char in item['text']:
+                mask[cur_y: cur_y + char_h, cur_x: cur_x + char_w] = self.get_char2idx(char)
+                cur_x += char_w
+
+        tensor = torch.from_numpy(mask)
+        return tensor
+
 
 if __name__ == "__main__":
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
@@ -283,4 +296,5 @@ if __name__ == "__main__":
     with open(label_path, 'r') as f:
         label_data = json.load(f)
 
-    # mask_generator.generate_test_file(image, label_data)
+    tensor = mask_generator.generate_test_file(image, label_data)
+    print()
