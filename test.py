@@ -129,8 +129,12 @@ def get_class_of_segmentation_textline(textline_image, threshold=0.2):
             if count > best:
                 cl = value
                 best = count
-    if zero_count / sum(counts) < 1 - threshold:
-        return cl
+    try:
+        if zero_count / sum(counts) < 1 - threshold:
+            return cl
+    except:
+        pass
+
     return 0
 
 
@@ -145,6 +149,38 @@ def get_final_result(data, target):
         d[target[i]] = results[i]
 
     return d
+
+
+def information_extraction(image, label_data):
+    """
+
+    :param image: numpy array image
+    :param label_data: [{'text': 'hello', 'box': [x, y, w, h]}]
+    :return:
+    """
+    tensor = mask_generator.generate_test_file(image, label_data)
+
+    img = transforms.functional.to_pil_image(tensor)
+    img = np.asarray(img)
+    augmented = aug(image=img)
+    img = augmented['image'].astype('int16')
+
+    img = torch.from_numpy(img).type(torch.LongTensor)
+
+    img = img.unsqueeze(0)
+    img = enc.process(img)
+    img = img.unsqueeze(0)
+    # img = img.to(self.device)
+
+    output = model.forward(img)
+    pred = output[0].data.max(1)[1].cpu().numpy()
+    pred = pred.reshape(512, 512)
+
+    pred = resize_segmentation_map(image, pred).astype('int16')
+    res = cut_out_textlines(label_data, pred)
+    res = get_final_result(res, mask_generator.target)
+
+    return res
 
 
 if __name__ == '__main__':
@@ -189,44 +225,6 @@ if __name__ == '__main__':
         with open(label_path, 'r') as f:
             label_data = json.load(f)
 
-        tensor = mask_generator.generate_test_file(image, label_data)
-        resized_image = cv2.resize(image, (int(512 * image.shape[1] / image.shape[0]), 512))
+        # --------- MAIN ---------
+        print(information_extraction(image, label_data))
 
-        img = transforms.functional.to_pil_image(tensor)
-        img = np.asarray(img)
-        augmented = aug(image=img)
-        img = augmented['image'].astype('int16')
-        augmented_img = img.copy()
-
-        img = torch.from_numpy(img).type(torch.LongTensor)
-
-        img = img.unsqueeze(0)
-        img = enc.process(img)
-        img = img.unsqueeze(0)
-        # img = img.to(self.device)
-
-        output = model.forward(img)
-        # print(output.shape())
-        pred = output[0].data.max(1)[1].cpu().numpy()
-        pred = pred.reshape(512, 512)
-
-        pred = resize_segmentation_map(image, pred).astype('int16')
-        res = cut_out_textlines(label_data, pred)
-        res = get_final_result(res, mask_generator.target)
-        print('image', image_name)
-        print(res)
-        # output = decode_segmap(pred, mask_generator.target, True)
-        # output = np.array(output, dtype=np.int)
-
-        # # temp = np.zeros([augmented_img.shape[0], augmented_img.shape[1], 3], dtype=np.int)#.astype('int16')
-        # # augmented_img = np.array(augmented_img, dtype=np.int)
-        # # temp[:, :, 0] = augmented_img
-        # # temp = temp.astype('int16')
-        # # augmented_img = np.array([augmented_img, augmented_img, augmented_img]).transpose(1, 2, 0)
-        #
-        # # temp = np.array([temp])
-        # # output = np.array([output])
-        # # image_show = np.array([temp, output])
-        # image_show = np.concatenate([resized_image, output], axis=1)
-        # plt.imshow(image_show)
-        # plt.show()
