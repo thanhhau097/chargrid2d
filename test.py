@@ -142,7 +142,10 @@ def get_final_result(data, target):
     results = [''] * len(target)
     for item in data:
         if item['class'] != 0:
-            results[item['class']] = results[item['class']] + ' ' + item['text']
+            if results[item['class']] == '':
+                results[item['class']] = item['text']
+            else:
+                results[item['class']] = results[item['class']] + ' ' + item['text']
 
     d = {}
     for i in range(len(target)):
