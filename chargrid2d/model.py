@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 
-from utils import init_weights
+from chargrid2d.utils import init_weights
 
 
 class Encoder(nn.Module):

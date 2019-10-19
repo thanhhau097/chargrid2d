@@ -1,20 +1,18 @@
-import os
 import argparse
-import json
-
-import cv2
-import torch
-import albumentations as alb
-from torchvision import transforms
-import numpy as np
-from matplotlib import pyplot as plt
 import glob
-from scipy.stats import mode
+import json
+import os
 
-from dataloader_utils.generate_mask import MaskGenerator
-from model import Chargrid2D
-from dataloader_utils.onehotencoder import OneHotEncoder
+import albumentations as alb
+import cv2
+import numpy as np
+import torch
+from matplotlib import pyplot as plt
+from torchvision import transforms
 
+from chargrid2d.dataloader_utils.generate_mask import MaskGenerator
+from chargrid2d.dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.model import Chargrid2D
 
 all_color = [
     (0, 0, 0),

@@ -1,16 +1,16 @@
 import argparse
+import glob
+import json
+import operator
 import os
 import os.path as osp
-import operator
-import glob
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import json
 
-from dataloader_utils.utils import make_folder, read_json, write_json, extract_info
+from chargrid2d.dataloader_utils.utils import make_folder, read_json, write_json
+
 
 class MaskGenerator():
     def __init__(self):

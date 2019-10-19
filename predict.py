@@ -1,17 +1,17 @@
 import argparse
+import glob
+import os.path as osp
 
 import albumentations as alb
-import os.path as osp
 import cv2
 import numpy as np
-import glob
 import torch
-from torchvision import transforms
 from matplotlib import pyplot as plt
+from torchvision import transforms
 
-from model import Chargrid2D
-from dataloader_utils.utils import read_json, make_folder
-from dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.dataloader_utils.utils import read_json, make_folder
+from chargrid2d.model import Chargrid2D
 
 all_color = [
     (0, 0, 0),

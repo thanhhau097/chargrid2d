@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import one_hot
+from chargrid2d.utils import one_hot
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 

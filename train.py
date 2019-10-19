@@ -1,13 +1,12 @@
 import os
 
-import torch
 import numpy as np
+import torch
+from chargrid2d.dataloader import ChargridDataloader
+from chargrid2d.loss import ChargridLoss
+from chargrid2d.metrics import IoU
 
-from dataloader import ChargridDataloader
-from loss import ChargridLoss
-from model import Chargrid2D
-from metrics import IoU
-
+from chargrid2d.model import Chargrid2D
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
