@@ -9,5 +9,5 @@ To train model, first you need to run chargrid2d/dataloader_utils/generate_mask.
 
 Then you need to run train.py file to train the model.
 
-If you have any questions, please email me at thanhhau097@gmail.com
+If you have any questions, please create an issue.
 
