@@ -4,8 +4,6 @@
 
 To train model, first you need to run chargrid2d/dataloader_utils/generate_mask.py to generate data to train segmentation model from bounding box and text.
 
-Hi Neha,
-
 To use with SROIE dataset, we need to do labeling corresponding class for each box in the image. You can read the code in `generate_masks.py` file, which will call this function:
 
 ```python
