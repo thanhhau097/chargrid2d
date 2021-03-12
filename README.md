@@ -27,7 +27,7 @@ def __convert_data_sroie(self, label_json):
     return std_out
 ```
 
-the input data in json file should be a python dictionary with keys: `text`, `class`, `box`.
+the input data in json file should be a list of dictionary with keys: `text`, `class`, `box`.
 
 You could do the processing by using this (which was commented out in the main function):
 
