@@ -1,15 +1,16 @@
 import argparse
+import glob
+import json
+import operator
 import os
 import os.path as osp
-import operator
-import glob
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from dataloader_utils.utils import make_folder, read_json, write_json, extract_info
+from chargrid2d.dataloader_utils.utils import make_folder, read_json, write_json
+
 
 class MaskGenerator():
     def __init__(self):
@@ -32,7 +33,7 @@ class MaskGenerator():
                 regions = item['regions']
         except:
             regions = label_json['attributes']['_via_img_metadata']['regions']
-        
+
         for region in regions:
             if 'x' not in region['shape_attributes']:
                 continue
@@ -50,22 +51,42 @@ class MaskGenerator():
                 fm_key = region['region_attributes']['formal_key'].strip()
             except:
                 fm_key = region['region_attributes']['key'].strip()
-            
+
             ocr = region['region_attributes']['label']
             for char in ocr:
                 if char not in self.__corpus__:
                     self.__corpus__[char] = 1
                 else:
                     self.__corpus__[char] += 1
-                    
+
             std_out.append({
                 'value': ocr,
                 'formal_key': fm_key,
                 'key_type': key_type,
                 'location': [x, y, width, height]
             })
-        
+
         return std_out
+
+    def __convert_data_sroie(self, label_json):
+        std_out = []
+
+        for item in label_json:
+            for char in item['text']:
+                if char not in self.__corpus__:
+                    self.__corpus__[char] = 1
+                else:
+                    self.__corpus__[char] += 1
+
+            std_out.append({
+                'value': item['text'],
+                'formal_key': item['class'],
+                'key_type': 'value',
+                'location': item['box']
+            })
+
+        return std_out
+
 
     def __make_corpus(self):
         x = self.__corpus__
@@ -113,7 +134,7 @@ class MaskGenerator():
             self.path_lbls.append(lbl_path)
             self.path_imgs.append(img_path)
 
-            lbl_data = self.__convert_data(read_json(lbl_path))
+            lbl_data = self.__convert_data_sroie(read_json(lbl_path))
             write_json(osp.join(std_lbl_fol, name), lbl_data)
             self.path_std_lbls.append(osp.join(std_lbl_fol, name))
     
@@ -207,12 +228,45 @@ class MaskGenerator():
         self.get_corpus()
         self.generate_target()
         # self.generate_mask('.')
-        
+
+    def load_json(self, path):
+        with open(path, 'r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+        return data
+
+    def load_config(self, corpus_path, char2idx_path, target_path, target2idx_path):
+        self.corpus = self.load_json(corpus_path)
+        self.char2idx = self.load_json(char2idx_path)
+        self.target = self.load_json(target_path)
+        self.target2idx = self.load_json(target2idx_path)
+
+    def generate_test_file(self, image, label_dict):
+        """
+
+        :param image: input image
+        :param label_dict: dictionary of ground truth [{'text': 'ground_truth_text', 'box': [x, y , width, height]}]
+        :return:
+        """
+        doc_h, doc_w = image.shape[:2]
+        mask = np.zeros((doc_h, doc_w), dtype='int16')
+
+        for item in label_dict:
+            w, h = item['box'][2], item['box'][3]
+            char_w, char_h = int(w / (len(item['text']) + 1)), int(h) // 2
+            cur_x, cur_y = int(item['box'][0]), int(item['box'][1])
+
+            for char in item['text']:
+                mask[cur_y: cur_y + char_h, cur_x: cur_x + char_w] = self.get_char2idx(char)
+                cur_x += char_w
+
+        tensor = torch.from_numpy(mask)
+        return tensor
+
 
 if __name__ == "__main__":
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root_folder', default='../data', type=str)
+    parser.add_argument('--root_folder', default='../data/sroie/test/', type=str)
 
     args = parser.parse_args()
     root = args.root_folder
@@ -225,3 +279,22 @@ if __name__ == "__main__":
     mask_generator = MaskGenerator()
     mask_generator.process(lbl_fol, img_fol, out_fol)
     mask_generator.generate_mask('.')
+
+    # # ---------- TEST -----------
+    # mask_generator = MaskGenerator()
+    # corpus_path = '../data/sroie/corpus.json'
+    # char2idx_path = '../data/sroie/char2idx.json'
+    # target_path = '../data/sroie/target.json'
+    # target2idx_path = '../data/sroie/target2idx.json'
+    # mask_generator.load_config(corpus_path, char2idx_path, target_path, target2idx_path)
+
+    # image_name = 'X00016469671'
+    # image_path = os.path.join(root, 'images', image_name + '.jpg')
+    # label_path = os.path.join(root, 'labels', image_name + '.json')
+
+    # image = cv2.imread(image_path)
+    # with open(label_path, 'r') as f:
+    #     label_data = json.load(f)
+
+    # tensor = mask_generator.generate_test_file(image, label_data)
+    # print()

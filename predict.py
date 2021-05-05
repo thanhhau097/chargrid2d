@@ -1,17 +1,17 @@
 import argparse
+import glob
+import os.path as osp
 
 import albumentations as alb
-import os.path as osp
 import cv2
 import numpy as np
-import glob
 import torch
-from torchvision import transforms
 from matplotlib import pyplot as plt
+from torchvision import transforms
 
-from model import Chargrid2D
-from dataloader_utils.utils import read_json, make_folder
-from dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.dataloader_utils.utils import read_json, make_folder
+from chargrid2d.model import Chargrid2D
 
 all_color = [
     (0, 0, 0),
@@ -145,27 +145,49 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
 
-    corpus_path = './data/corpus.json'  #args.corpus_path
-    target_path = './data/target.json'  #args.target_path
-    model_path =  './weights/model_epoch_7.pth'  #args.model_path
-    make_folder('./data/debug_segment')
+    corpus_path = './data/sroie/corpus.json'  #args.corpus_path
+    target_path = './data/sroie/target.json'  #args.target_path
+    model_path =  './weights/model_epoch_80.pth'  #args.model_path
+    make_folder('./data/sroie/debug_segment')
 
-    predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})
+    predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/sroie/char2idx.json'})
 
-    for img_path in glob.glob('./data/images/*.png'):
-        name = osp.basename(img_path).replace('.png', '')
+
+    def squarify(M, val):
+        (a, b) = M.shape
+        if a > b:
+            padding = ((0, 0), ((a - b) // 2, (a - b) // 2))
+        else:
+            padding = (((b - a) // 2, (b - a) // 2), (0, 0))
+        return np.pad(M, padding, mode='constant', constant_values=val)
+
+    for img_path in glob.glob('./data/sroie/images/*.jpg'):
+        name = osp.basename(img_path).replace('.jpg', '')
         print(name)
-        txtline_path = osp.join('./data/standard_lbl', name + '.json')
-        mask_path = osp.join('./data/semantic_gt', name + '.png')
+        txtline_path = osp.join('./data/sroie/standard_lbl', name + '.json')
+        mask_path = osp.join('./data/sroie/semantic_gt', name + '.png')
+        tensor_path = osp.join('./data/sroie/tensor_input', name + '.pt')
         if not osp.exists(txtline_path) or not osp.exists(mask_path):
             continue
         # mask = cv2.imread(mask_path, 0)
-        # augmented = predictor.aug(image=mask)
-        # mask = augmented['image'].astype('int16')
+        # # padding and resize
+        # mask = squarify(mask, 0)
+        # # mask = cv2.resize(mask, (512, 512), 0)
+        #
+        # # augmented = predictor.aug(image=mask)
+        # # mask = augmented['image'].astype('int16')
         output = predictor.process(img_path, txtline_path)
         print(output)
         predictor.decode_segmap(output, name, True)
 
-        # predictor.decode_segmap(mask, name, False)
-        # plt.imshow(mask)
-        # plt.show()
+        # predictor.decode_segmap(mask, name, True)
+        # # plt.imshow(mask)
+        # # plt.show()
+
+
+        # tensor = torch.load(tensor_path)
+        # input_arr = tensor.numpy()
+        # input_arr = squarify(input_arr, 0)
+        # # plt.imshow(input_arr)
+        # # plt.show()
+        # print(tensor.max())

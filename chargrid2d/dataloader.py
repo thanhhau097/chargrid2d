@@ -1,20 +1,19 @@
-import glob
 import os
 import os.path as osp
 
 import albumentations as alb
-from matplotlib import pyplot as plt
-import numpy as np
 import cv2
+import numpy as np
 import torch
+from PIL import Image
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
-from PIL import Image
 
-from dataloader_utils.utils import read_json
-from dataloader_utils.onehotencoder import OneHotEncoder
-from dataloader_utils.generate_mask import MaskGenerator
-from dataloader_utils.base_dataloader import BaseDataLoader
+from chargrid2d.dataloader_utils.base_dataloader import BaseDataLoader
+from chargrid2d.dataloader_utils.generate_mask import MaskGenerator
+from chargrid2d.dataloader_utils.onehotencoder import OneHotEncoder
+from chargrid2d.dataloader_utils.utils import read_json
 
 
 class SegDataset(Dataset):
@@ -61,8 +60,8 @@ class SegDataset(Dataset):
         for line in obj:
             coor = line['box']
             c_x, c_y, w, h = coor
-            w += 0.001
-            h += 0.001
+            # w += 0.001
+            # h += 0.001
             boxes.append([c_x, c_y, w, h])
             labels.append(self.target2idx[line['class']])
 
@@ -83,6 +82,7 @@ class SegDataset(Dataset):
         img = np.asarray(img)
         mask = np.asarray(semantic)
         ori_boxes, label_boxes = self.__getobjcoor__(obj)
+        ori_boxes = ori_boxes
 
         if self.transform:
             augmented = self.transform(image=img, mask=mask, bboxes=ori_boxes, lbl_id=label_boxes)
@@ -171,7 +171,7 @@ class ChargridDataloader(BaseDataLoader):
             alb.Resize(self.size, self.size, interpolation=0)
         ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-        dataset = SegDataset('./data', list_file_name_path, transform=self.aug)
+        dataset = SegDataset(root, list_file_name_path, transform=self.aug)
 
         kwarg = {
             'dataset': dataset,
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         alb.Resize(size, size)
     ], alb.BboxParams(format='coco', label_fields=['lbl_id'], min_area=2.0))
 
-    dataset = SegDataset('./data', 'train_files.txt', transform=aug)
+    dataset = SegDataset('./data/sroie', 'train_files.txt', transform=aug)
     data_loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=dataset.collate_fn)
     print(len(data_loader))
 
