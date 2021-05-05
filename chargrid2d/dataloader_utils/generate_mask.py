@@ -63,7 +63,7 @@ class MaskGenerator():
                 'value': ocr,
                 'formal_key': fm_key,
                 'key_type': key_type,
-                'location': [x, y, width, height]
+                'box': [x, y, width, height]
             })
 
         return std_out

@@ -13,34 +13,6 @@ from chargrid2d.dataloader_utils.onehotencoder import OneHotEncoder
 from chargrid2d.dataloader_utils.utils import read_json, make_folder
 from chargrid2d.model import Chargrid2D
 
-all_color = [
-    (0, 0, 0),
-    (0, 255, 0),
-    (0,0,255),
-    (0,255,255),
-    (255, 0, 255),
-    (255, 255, 0),
-    (127,255,212),
-    (69,139,116),
-    (131,139,139),
-    (227,207,87),
-    (139,125,107),
-    (138,43,226),
-    (156,102,31),
-    (165,42,42),
-    (255,64,64),
-    (255,97,3),
-    (127,255,0),
-    (238,18,137),
-    (128,128,128),
-    (34,139,34),
-    (139,105,20),
-    (255,105,180),
-    (60,179,113),
-    (139,0,0),
-    (0, 139, 0),
-    (0, 0, 139),
-]
 
 class PredictProcedure():
     def __init__(self, corpus_path, target_path, model_path, **kwargs):
@@ -63,6 +35,36 @@ class PredictProcedure():
             alb.Resize(self.size, self.size, 0)
         ])
         self.enc = OneHotEncoder(self.corpus)
+
+        self.all_color = [
+            (0, 0, 0),
+            (0, 255, 0),
+            (0,0,255),
+            (0,255,255),
+            (255, 0, 255),
+            (255, 255, 0),
+            (127,255,212),
+            (69,139,116),
+            (131,139,139),
+            (227,207,87),
+            (139,125,107),
+            (138,43,226),
+            (156,102,31),
+            (165,42,42),
+            (255,64,64),
+            (255,97,3),
+            (127,255,0),
+            (238,18,137),
+            (128,128,128),
+            (34,139,34),
+            (139,105,20),
+            (255,105,180),
+            (60,179,113),
+            (139,0,0),
+            (0, 139, 0),
+            (0, 0, 139),
+        ]
+        self.all_color = self.all_color * (len(self.target) // len(self.all_color) + 1)
 
     def get_char2idx(self, char):
         if char in self.char2idx:
@@ -105,7 +107,8 @@ class PredictProcedure():
     def decode_segmap(self, temp, img_name, plot=False):
         PALETTE = {
         }
-        for name, color in zip(self.target, all_color):
+
+        for name, color in zip(self.target, self.all_color):
             PALETTE[name] = color
         
         r = np.zeros_like(temp).astype(np.uint8)
@@ -145,12 +148,12 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
 
-    corpus_path = './data/sroie/corpus.json'  #args.corpus_path
-    target_path = './data/sroie/target.json'  #args.target_path
-    model_path =  './weights/model_epoch_80.pth'  #args.model_path
-    make_folder('./data/sroie/debug_segment')
+    corpus_path = './data/corpus.json'  #args.corpus_path
+    target_path = './data/target.json'  #args.target_path
+    model_path =  './weights/model_epoch_35.pth'  #args.model_path
+    make_folder('./data/debug_segment')
 
-    predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/sroie/char2idx.json'})
+    predictor = PredictProcedure(corpus_path, target_path, model_path, **{'device': device, 'char2idx_path': './data/char2idx.json'})
 
 
     def squarify(M, val):
@@ -161,12 +164,12 @@ if __name__ == "__main__":
             padding = (((b - a) // 2, (b - a) // 2), (0, 0))
         return np.pad(M, padding, mode='constant', constant_values=val)
 
-    for img_path in glob.glob('./data/sroie/images/*.jpg'):
-        name = osp.basename(img_path).replace('.jpg', '')
+    for img_path in glob.glob('/home/thanh/projects/axaocr/data/axa_kv/train/images/*.png')[:5]:
+        name = osp.basename(img_path).replace('.png', '')
         print(name)
-        txtline_path = osp.join('./data/sroie/standard_lbl', name + '.json')
-        mask_path = osp.join('./data/sroie/semantic_gt', name + '.png')
-        tensor_path = osp.join('./data/sroie/tensor_input', name + '.pt')
+        txtline_path = osp.join('./data/standard_lbl', name + '.json')
+        mask_path = osp.join('./data/semantic_gt', name + '.png')
+        tensor_path = osp.join('./data/tensor_input', name + '.pt')
         if not osp.exists(txtline_path) or not osp.exists(mask_path):
             continue
         # mask = cv2.imread(mask_path, 0)
