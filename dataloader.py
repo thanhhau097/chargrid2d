@@ -146,7 +146,7 @@ class SegDataset(Dataset):
         with open(os.path.join(root, list_file_name_path)) as f:
             file_names = f.readlines()
 
-        return [name[:-1] for name in file_names]
+        return [name.replace('\n', '') for name in file_names]
 
     def get_category_file_paths(self, root, folder, file_names, suffix):
         return [os.path.join(root, folder, name) + suffix for name in file_names]

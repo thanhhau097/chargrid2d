@@ -218,7 +218,7 @@ if __name__ == "__main__":
     root = args.root_folder
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
 
-    lbl_fol = osp.join(root, 'processed_labels')
+    lbl_fol = osp.join(root, 'labels')
     img_fol = osp.join(root, 'images')
     out_fol = osp.join('./data', 'standard_lbl')
 
