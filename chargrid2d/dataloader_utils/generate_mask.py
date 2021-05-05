@@ -134,7 +134,7 @@ class MaskGenerator():
             self.path_lbls.append(lbl_path)
             self.path_imgs.append(img_path)
 
-            lbl_data = self.__convert_data_sroie(read_json(lbl_path))
+            lbl_data = self.__convert_data(read_json(lbl_path))
             write_json(osp.join(std_lbl_fol, name), lbl_data)
             self.path_std_lbls.append(osp.join(std_lbl_fol, name))
     
