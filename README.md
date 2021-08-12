@@ -4,7 +4,19 @@
 
 To train model, first you need to run chargrid2d/dataloader_utils/generate_mask.py to generate data to train segmentation model from bounding box and text.
 
-To use with SROIE dataset, we need to do labeling corresponding class for each box in the image. You can read the code in `generate_masks.py` file, which will call this function:
+To use with any dataset, we need to do labeling corresponding class for each box in the image. The input data in json file should be a list of dictionary with keys: `text`, `class`, `box`.
+
+```
+[
+    {
+        "text": "abc",
+        "class": "company_name",
+        "box": [x1, y1, x2, y2]
+    }
+]
+```
+
+You can read the code in `generate_masks.py` file, which will call this function:
 
 ```python
 def __convert_data_sroie(self, label_json):
@@ -27,9 +39,8 @@ def __convert_data_sroie(self, label_json):
     return std_out
 ```
 
-the input data in json file should be a list of dictionary with keys: `text`, `class`, `box`.
 
-You could do the processing by using this (which was commented out in the main function):
+You could do the processing by using this (which was commented out in the main function) in `generate_mask.py` file:
 
 ```python
 mask_generator = MaskGenerator()
@@ -38,5 +49,8 @@ mask_generator.generate_mask('.')
 ```
 
 Then you need to run train.py file to train the model.
+```
+python train.py
+```
 
 If you have any questions, please create an issue.
