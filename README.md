@@ -11,7 +11,7 @@ To use with any dataset, we need to do labeling corresponding class for each box
     {
         "text": "abc",
         "class": "company_name",
-        "box": [x1, y1, x2, y2]
+        "box": [x, y, w, h]
     }
 ]
 ```
