@@ -272,29 +272,29 @@ if __name__ == "__main__":
     root = args.root_folder
 #     root = 'D:/cinnamon/dataset/kyocera/S3/data/20190924'
 
-    # lbl_fol = osp.join(root, 'labels')
-    # img_fol = osp.join(root, 'images')
-    # out_fol = osp.join('./data', 'standard_lbl')
+    lbl_fol = osp.join(root, 'labels')
+    img_fol = osp.join(root, 'images')
+    out_fol = osp.join('./data', 'standard_lbl')
 
-    # mask_generator = MaskGenerator()
-    # mask_generator.process(lbl_fol, img_fol, out_fol)
-    # mask_generator.generate_mask('.')
-
-    # ---------- TEST -----------
     mask_generator = MaskGenerator()
-    corpus_path = '../data/sroie/corpus.json'
-    char2idx_path = '../data/sroie/char2idx.json'
-    target_path = '../data/sroie/target.json'
-    target2idx_path = '../data/sroie/target2idx.json'
-    mask_generator.load_config(corpus_path, char2idx_path, target_path, target2idx_path)
+    mask_generator.process(lbl_fol, img_fol, out_fol)
+    mask_generator.generate_mask('.')
 
-    image_name = 'X00016469671'
-    image_path = os.path.join(root, 'images', image_name + '.jpg')
-    label_path = os.path.join(root, 'labels', image_name + '.json')
+#     # ---------- TEST -----------
+#     mask_generator = MaskGenerator()
+#     corpus_path = '../data/sroie/corpus.json'
+#     char2idx_path = '../data/sroie/char2idx.json'
+#     target_path = '../data/sroie/target.json'
+#     target2idx_path = '../data/sroie/target2idx.json'
+#     mask_generator.load_config(corpus_path, char2idx_path, target_path, target2idx_path)
 
-    image = cv2.imread(image_path)
-    with open(label_path, 'r') as f:
-        label_data = json.load(f)
+#     image_name = 'X00016469671'
+#     image_path = os.path.join(root, 'images', image_name + '.jpg')
+#     label_path = os.path.join(root, 'labels', image_name + '.json')
 
-    tensor = mask_generator.generate_test_file(image, label_data)
-    print()
+#     image = cv2.imread(image_path)
+#     with open(label_path, 'r') as f:
+#         label_data = json.load(f)
+
+#     tensor = mask_generator.generate_test_file(image, label_data)
+#     print()
